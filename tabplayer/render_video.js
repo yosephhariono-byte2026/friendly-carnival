@@ -1,26 +1,29 @@
-// Render index.html menjadi MP4 (1920x1080, 30fps) dengan suara biola sintetis.
-// Pakai: node render_video.js [output.mp4] [tempo]
+// Render halaman lagu menjadi MP4 (1920x1080, 30fps) dengan suara biola sintetis.
+// Pakai: node tabplayer/render_video.js <folder-lagu>/index.html <output.mp4> [tempo]
 const { chromium } = require('playwright');
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path'), os = require('os');
 
-const OUT = path.resolve(process.argv[2] || 'sparkle_tab_biola.mp4');
-const TEMPO = +(process.argv[3] || 100);
+const PAGE = path.resolve(process.argv[2]);
+const OUT = path.resolve(process.argv[3]);
 const FPS = 30;
 
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
-  await p.goto('file://' + path.join(__dirname, 'index.html') + '?video');
-  await p.evaluate(t => { setTempo(t); }, TEMPO);
-  const info = await p.evaluate(() => ({ events: SONG.EVENTS.map(e => ({ s: e.start, d: e.dur, m: e.midi })), total: SONG.TOTAL }));
-  const eighth = 60 / TEMPO / 3, LEAD = 2;
-  const dur = (info.total + LEAD) * eighth;
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto('file://' + PAGE + '?video');
+  await p.waitForTimeout(300);
+  if (errs.length) throw new Error(errs.join('\n'));
+  if (process.argv[4]) await p.evaluate(t => setTempo(t), +process.argv[4]);
+  const info = await p.evaluate(() => ({
+    events: SONG.EVENTS.map(e => ({ s: e.start, d: e.dur, m: e.midi, pizz: e.pizz })),
+    total: SONG.TOTAL, ...SONG_TIMING() }));
+  const dur = (info.total + info.LEAD) * info.eighth;
 
-  // audio
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sparkle-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tab-'));
   const wav = path.join(tmp, 'a.wav');
-  fs.writeFileSync(path.join(tmp, 'ev.json'), JSON.stringify({ ...info, eighth, LEAD, dur }));
+  fs.writeFileSync(path.join(tmp, 'ev.json'), JSON.stringify({ ...info, dur }));
   execFileSync('python3', [path.join(__dirname, 'synth.py'), path.join(tmp, 'ev.json'), wav], { stdio: 'inherit' });
 
   const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
@@ -30,9 +33,8 @@ const FPS = 30;
   const frames = Math.ceil(dur * FPS);
   for (let i = 0; i < frames; i++) {
     const url = await p.evaluate(t => { renderAt(t); return document.getElementById('c').toDataURL('image/jpeg', 0.92); }, i / FPS);
-    const buf = Buffer.from(url.split(',')[1], 'base64');
-    if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
-    if (i % 300 === 0) process.stdout.write(`frame ${i}/${frames}\n`);
+    if (!ff.stdin.write(Buffer.from(url.split(',')[1], 'base64'))) await new Promise(r => ff.stdin.once('drain', r));
+    if (i % 600 === 0) console.log(`frame ${i}/${frames}`);
   }
   ff.stdin.end();
   await new Promise(r => ff.on('close', r));

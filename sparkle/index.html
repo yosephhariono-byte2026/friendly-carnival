@@ -4,16 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sparkle Tab Biola</title>
-<style>
-  :root { --bg:#0b0f16; --fg:#efe7da; --accent:#e9a656; }
-  html,body { margin:0; background:var(--bg); color:var(--fg); font-family:"DejaVu Sans",system-ui,sans-serif; }
-  #wrap { max-width:1920px; margin:0 auto; }
-  canvas { width:100%; height:auto; display:block; }
-  #ctl { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:12px 16px; }
-  #ctl button { background:var(--accent); color:#1a1206; border:0; border-radius:8px; padding:8px 18px; font-size:16px; cursor:pointer; }
-  #ctl label { font-size:14px; opacity:.8; }
-  body.video #ctl { display:none; }
-</style>
+<link rel="stylesheet" href="../tabplayer/player.css">
 </head>
 <body>
 <div id="wrap">
@@ -21,17 +12,21 @@
   <div id="ctl">
     <button id="play">Putar</button>
     <button id="restart">Ulang</button>
-    <label>Tempo <input id="tempo" type="range" min="40" max="100" value="100"> <span id="tv">100</span></label>
+    <label>Tempo <input id="tempo" type="range"> <span id="tv"></span></label>
     <label><input id="sound" type="checkbox" checked> Suara</label>
   </div>
 </div>
 <script>
-// ---------------------------------------------------------------------------
-// Data lagu: urutan nada dalam satuan seperdelapan (1 = not 1/8).
-// 12/8, satu birama = 12. "r" = istirahat. Nada sesuai partitur (E mayor).
-// Intro (12 birama) dan Interlude (8 birama) dipadatkan jadi 1 birama hitungan.
-// ---------------------------------------------------------------------------
-const BARS = [
+// Ditranskrip dari partitur "Sparkle" (GMS Easy Violin) milik pengguna.
+// E mayor, 12/8, ♩. = 100. Satuan durasi: 1/8 (birama = 12).
+// Intro (12 birama) dan Interlude (8 birama) dipadatkan jadi 1 birama tunggu.
+window.SONG_CONFIG = {
+  kicker: "Kimi no Na Wa",
+  title: "Sparkle",
+  subtitle: "RADWIMPS  \u00B7  E mayor  \u00B7  tab biola",
+  barLen: 12, beat: 3, tempo: 100, px: 70,
+  sections: { 1:"Intro (12 birama, tunggu)", 2:"A", 18:"Interlude (8 birama, tunggu)", 19:"B", 47:"C" },
+  bars: [
   /* 1  Intro */ "r12",
   /* 2  */ "r3 D#4:1 D#4:1 D#4:1 D#4:2 C#4:1 C#4:2 B3:1",
   /* 3  */ "B3:6 r6",
@@ -98,185 +93,9 @@ const BARS = [
   /* 64 */ "C#5:11 B4:1",
   /* 65 */ "B4:12",
   /* 66 */ "r12",
-];
-const SECTIONS = { 1:"Intro · 12 birama (tunggu)", 2:"A", 18:"Interlude · 8 birama (tunggu)", 19:"B", 47:"C" };
-
-const STRINGS = [ // atas ke bawah, seperti contoh
-  { name:"E", midi:76 }, { name:"A", midi:69 }, { name:"D", midi:62 }, { name:"G", midi:55 },
-];
-const NAMES = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
-function midiOf(p){ const m=p.match(/^([A-G])(#?)(\d)$/); return 12*(+m[3]+1)+NAMES[m[1]]+(m[2]?1:0); }
-const FINGER_DESC = {0:"senar kosong",1:"jari 1 rendah",2:"jari 1",3:"jari 2 rendah",4:"jari 2 tinggi",5:"jari 3",6:"jari 3 tinggi",7:"jari 4"};
-const FINGER_NUM  = {0:0,1:1,2:1,3:2,4:2,5:3,6:3,7:4};
-function placeNote(midi){ // posisi I: pilih senar tertinggi yang bisa (0..7 semitone)
-  for (let s=0;s<STRINGS.length;s++){ const off=midi-STRINGS[s].midi; if(off>=0&&off<=7){
-    // E5 dimainkan senar E kosong, A4 senar A kosong (bukan jari 4)
-    if (off===7 && s<3) continue;
-    return { string:s, off, finger:FINGER_NUM[off], desc:FINGER_DESC[off] }; } }
-  throw new Error("di luar posisi I: "+midi);
-}
-function prettyName(p){ return p.replace("#","♯"); }
-
-// Bangun daftar event (waktu dalam satuan 1/8)
-const EVENTS=[]; let pos=0;
-BARS.forEach((bar,i)=>{
-  const barNo=i+1; let sum=0;
-  for (const tok of bar.trim().split(/\s+/)){
-    const cont = tok.startsWith("~"), tie = tok.endsWith("~");
-    const t = tok.replace(/~/g,"");
-    if (t[0]==="r"){ const d=+t.slice(1); pos+=d; sum+=d; continue; }
-    const [p,ds]=t.split(":"); const d=+ds;
-    if (cont){ EVENTS[EVENTS.length-1].dur+=d; }
-    else { const midi=midiOf(p); EVENTS.push({ start:pos, dur:d, pitch:p, midi, bar:barNo, ...placeNote(midi) }); }
-    pos+=d; sum+=d;
-  }
-  if (sum!==12) throw new Error("Birama "+barNo+" berjumlah "+sum);
-});
-const TOTAL = BARS.length*12;
-window.SONG = { EVENTS, TOTAL };
-
-// ---------------------------------------------------------------------------
-// Gambar
-// ---------------------------------------------------------------------------
-const cv=document.getElementById("c"), g=cv.getContext("2d");
-const C = { bg:"#0b0f16", panel:"#141b25", inner:"#0a0d13", line:"#2b3442", text:"#efe7da", dim:"#8d96a3", accent:"#e9a656", circ:"#1b2230", circLine:"#3a4454" };
-const PX=70, HEAD_X=400, LEFT=150, RIGHT=1830, TOP=318, BOTTOM=818;
-const ROW_Y=[396,506,616,726];
-const LEAD=2; // ketukan (dalam 1/8) sebelum mulai, supaya tidak langsung bunyi
-
-function rr(x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
-function fmt(s){ s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
-
-let EIGHTH_SEC = 60/100/3; // tempo dalam not 1/4 bertitik
-function totalSec(){ return (TOTAL+LEAD)*EIGHTH_SEC; }
-
-function renderAt(sec){
-  const u = sec/EIGHTH_SEC - LEAD; // posisi dalam satuan 1/8
-  // latar
-  g.fillStyle=C.bg; g.fillRect(0,0,1920,1080);
-  const grd=g.createRadialGradient(200,0,0,200,0,700); grd.addColorStop(0,"rgba(233,166,86,0.10)"); grd.addColorStop(1,"rgba(233,166,86,0)");
-  g.fillStyle=grd; g.fillRect(0,0,1920,1080);
-  // judul
-  g.fillStyle="#9fb4c4"; g.font="15px 'DejaVu Sans'"; g.textBaseline="alphabetic";
-  g.save(); g.letterSpacing="4px"; g.fillText("KIMI NO NA WA",72,66); g.restore();
-  g.fillStyle=C.text; g.font="92px 'DejaVu Serif'"; g.fillText("Sparkle",72,162);
-  g.fillStyle="#a6a196"; g.font="28px 'DejaVu Sans'"; g.fillText("RADWIMPS  ·  E mayor  ·  tab biola",76,215);
-
-  // nada aktif
-  let cur=null, next=null;
-  for (const e of EVENTS){ if (u>=e.start && u<e.start+e.dur){ cur=e; } if (e.start>u && !next) next=e; }
-  const barNow = Math.min(BARS.length, Math.max(1, Math.floor(Math.max(0,u)/12)+1));
-  // kartu
-  rr(1468,48,380,220,24); g.fillStyle=C.panel; g.fill(); g.strokeStyle="#2a3443"; g.lineWidth=1.5; g.stroke();
-  g.textAlign="center"; g.fillStyle="#9fb4c4"; g.font="15px 'DejaVu Sans'";
-  const show = cur || next;
-  g.fillText(show? ("SENAR "+STRINGS[show.string].name) : "", 1658,88);
-  g.fillStyle = cur? C.accent : "#5d6673"; g.font="130px 'DejaVu Serif'";
-  g.fillText(show? String(show.finger):"–", 1658,208);
-  g.fillStyle="#a6a196"; g.font="17px 'DejaVu Sans'";
-  g.fillText(show? `${prettyName(show.pitch)}  ·  ${show.desc}  ·  Birama ${barNow}` : "", 1658,240);
-  g.textAlign="left";
-
-  // panel tab
-  rr(48,292,1824,596,32); g.fillStyle=C.panel; g.fill(); g.strokeStyle="#222b38"; g.stroke();
-  g.fillStyle=C.inner; g.fillRect(LEFT,TOP,RIGHT-LEFT,BOTTOM-TOP);
-  // label senar
-  g.font="22px 'DejaVu Sans'"; g.textAlign="center"; g.textBaseline="middle";
-  STRINGS.forEach((s,i)=>{ g.fillStyle = cur&&cur.string===i ? C.accent : "#b9c0ca"; g.fillText(s.name,98,ROW_Y[i]); });
-  g.save(); g.beginPath(); g.rect(LEFT,TOP,RIGHT-LEFT,BOTTOM-TOP); g.clip();
-  // garis senar
-  g.strokeStyle=C.line; g.lineWidth=1.2;
-  ROW_Y.forEach(y=>{ g.beginPath(); g.moveTo(LEFT,y); g.lineTo(RIGHT,y); g.stroke(); });
-  const xOf = t => HEAD_X + (t-u)*PX;
-  // garis birama + nomor + bagian
-  for (let b=0;b<=BARS.length;b++){
-    const x=xOf(b*12); if (x<LEFT-300||x>RIGHT+10) continue;
-    g.strokeStyle="#262f3c"; g.lineWidth=1.5; g.beginPath(); g.moveTo(x,TOP); g.lineTo(x,BOTTOM); g.stroke();
-    if (b<BARS.length){
-      g.fillStyle="#8d96a3"; g.font="16px 'DejaVu Sans'"; g.textAlign="left"; g.fillText(String(b+1),x+20,337);
-      if (SECTIONS[b+1]){ const lab=SECTIONS[b+1];
-        if (lab.length<=2){ g.font="bold 16px 'DejaVu Sans'"; const w=26; g.strokeStyle=C.accent; g.lineWidth=1.5; g.strokeRect(x+50,325,w,24); g.fillStyle=C.accent; g.textAlign="center"; g.fillText(lab,x+50+w/2,338); }
-        else { g.fillStyle=C.accent; g.font="20px 'DejaVu Sans'"; g.textAlign="left"; g.fillText(lab,x+30,ROW_Y[1]+55); }
-      }
-    }
-  }
-  // garis playhead (di belakang nada)
-  g.strokeStyle=C.accent; g.lineWidth=3; g.beginPath(); g.moveTo(HEAD_X,358); g.lineTo(HEAD_X,802); g.stroke();
-  // ekor durasi
-  for (const e of EVENTS){
-    const x0=xOf(e.start), x1=xOf(e.start+e.dur)-14; if (x1<LEFT-40||x0>RIGHT+40) continue;
-    const y=ROW_Y[e.string]; const on = e===cur;
-    if (x1>x0+20){ g.strokeStyle= on? C.accent : "#3c4656"; g.lineWidth= on?4:3; g.beginPath(); g.moveTo(x0,y); g.lineTo(x1,y); g.stroke(); }
-  }
-  // lingkaran
-  g.textAlign="center"; g.textBaseline="middle";
-  for (const e of EVENTS){
-    const x=xOf(e.start); if (x<LEFT-30||x>RIGHT+30) continue;
-    const y=ROW_Y[e.string]; const on=e===cur; const past = e.start+e.dur<=u;
-    g.globalAlpha = past? 0.35 : 1;
-    if (on){ g.beginPath(); g.arc(x,y,27,0,Math.PI*2); g.fillStyle="rgba(233,166,86,0.25)"; g.fill(); }
-    g.beginPath(); g.arc(x,y,20,0,Math.PI*2);
-    g.fillStyle= on? C.accent : C.circ; g.fill();
-    g.strokeStyle= on? "#f6c88d" : C.circLine; g.lineWidth=1.5; g.stroke();
-    g.fillStyle= on? "#2a1c08" : "#e7e1d6"; g.font="26px 'DejaVu Serif'"; g.fillText(String(e.finger),x,y+1);
-    // penanda jari rendah/tinggi
-    if (e.off===1||e.off===3){ g.fillStyle= on?"#2a1c08":"#9aa3af"; g.font="13px 'DejaVu Sans'"; g.fillText("↓",x+19,y-17); }
-    if (e.off===6){ g.fillStyle= on?"#2a1c08":"#9aa3af"; g.font="13px 'DejaVu Sans'"; g.fillText("↑",x+19,y-17); }
-    g.globalAlpha=1;
-  }
-  g.restore();
-  // playhead (segitiga)
-  g.fillStyle=C.accent; g.beginPath(); g.moveTo(HEAD_X-7,350); g.lineTo(HEAD_X+7,350); g.lineTo(HEAD_X,362); g.closePath(); g.fill();
-
-  // progress
-  const T=totalSec(); g.textBaseline="middle"; g.textAlign="left"; g.fillStyle="#b9c0ca"; g.font="16px 'DejaVu Sans'";
-  g.fillText(fmt(sec),72,846); g.textAlign="right"; g.fillText(fmt(T),1864,846);
-  rr(150,846,1560,6,3); g.fillStyle="#2c3542"; g.fill();
-  rr(150,846,Math.max(6,1560*Math.min(1,sec/T)),6,3); g.fillStyle=C.accent; g.fill();
-
-  // legenda
-  rr(72,918,1776,86,16); g.fillStyle=C.panel; g.fill(); g.strokeStyle="#222b38"; g.stroke();
-  const L=[["0","senar kosong"],["1","telunjuk"],["2","jari tengah"],["3","manis"],["4","kelingking"]];
-  L.forEach((l,i)=>{ const x=98+i*340; g.textAlign="left"; g.fillStyle=C.accent; g.font="42px 'DejaVu Serif'"; g.fillText(l[0],x,961);
-    g.fillStyle="#b9c0ca"; g.font="22px 'DejaVu Sans'"; g.fillText(l[1],x+48,958); });
-  g.fillStyle="#8d96a3"; g.font="17px 'DejaVu Sans'"; g.textAlign="left";
-  g.fillText(`Senar E di atas, senar G di bawah. Posisi I. ↓ = jari agak mundur (rendah), ↑ = jari agak maju (tinggi). Tempo ${Math.round(20/EIGHTH_SEC)}. Ikuti angka yang menyala.`,72,1040);
-}
-window.renderAt = renderAt;
-window.setTempo = bpm => { EIGHTH_SEC = 60/bpm/3; };
-
-// ---------------------------------------------------------------------------
-// Pemutar interaktif (Web Audio)
-// ---------------------------------------------------------------------------
-let playing=false, t0=0, offset=0, actx=null, nodes=[];
-function freq(m){ return 440*Math.pow(2,(m-69)/12); }
-function schedule(fromSec){
-  if (!document.getElementById("sound").checked) return;
-  actx = actx || new AudioContext();
-  const now=actx.currentTime;
-  for (const e of EVENTS){
-    const s=(e.start+LEAD)*EIGHTH_SEC - fromSec, d=e.dur*EIGHTH_SEC;
-    if (s+d<0) continue;
-    const st=now+Math.max(0,s), en=now+s+d;
-    const o=actx.createOscillator(), o2=actx.createOscillator(), gn=actx.createGain(), lp=actx.createBiquadFilter();
-    o.type="sawtooth"; o2.type="triangle"; o.frequency.value=freq(e.midi); o2.frequency.value=freq(e.midi);
-    lp.type="lowpass"; lp.frequency.value=2600;
-    gn.gain.setValueAtTime(0,st); gn.gain.linearRampToValueAtTime(0.12,st+0.05); gn.gain.setValueAtTime(0.1,Math.max(st+0.06,en-0.06)); gn.gain.linearRampToValueAtTime(0,en);
-    o.connect(lp); o2.connect(lp); lp.connect(gn); gn.connect(actx.destination);
-    o.start(st); o2.start(st); o.stop(en+0.05); o2.stop(en+0.05); nodes.push(o,o2);
-  }
-}
-function stopAudio(){ nodes.forEach(n=>{try{n.stop();}catch(_){}}); nodes=[]; }
-function loop(){ if(!playing) return; const s=offset+(performance.now()-t0)/1000; if (s>=totalSec()){ playing=false; offset=0; document.getElementById("play").textContent="Putar"; renderAt(totalSec()); return; } renderAt(s); requestAnimationFrame(loop); }
-document.getElementById("play").onclick=()=>{
-  if (playing){ offset+=(performance.now()-t0)/1000; playing=false; stopAudio(); document.getElementById("play").textContent="Putar"; return; }
-  playing=true; t0=performance.now(); schedule(offset); document.getElementById("play").textContent="Jeda"; loop();
+],
 };
-document.getElementById("restart").onclick=()=>{ stopAudio(); offset=0; t0=performance.now(); if(playing) schedule(0); renderAt(0); };
-document.getElementById("tempo").oninput=ev=>{ const was=playing; if(was){ document.getElementById("play").click(); }
-  const frac=offset/totalSec(); setTempo(+ev.target.value); offset=frac*totalSec(); document.getElementById("tv").textContent=ev.target.value; renderAt(offset); };
-if (location.search.includes("video")) document.body.classList.add("video");
-document.fonts && document.fonts.ready.then(()=>renderAt(0)); renderAt(0);
 </script>
+<script src="../tabplayer/player.js"></script>
 </body>
 </html>
