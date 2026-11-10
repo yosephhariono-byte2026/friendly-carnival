@@ -1,4 +1,4 @@
-// Render halaman lagu menjadi MP4 (1920x1080, 30fps) dengan suara biola sintetis.
+// Render halaman lagu menjadi MP4 (720p, 30fps) dengan suara biola sintetis.
 // Pakai: node tabplayer/render_video.js <folder-lagu>/index.html <output.mp4> [tempo]
 const { chromium } = require('playwright');
 const { spawn, execFileSync } = require('child_process');
@@ -27,7 +27,7 @@ const FPS = 30;
   execFileSync('python3', [path.join(__dirname, 'synth.py'), path.join(tmp, 'ev.json'), wav], { stdio: 'inherit' });
 
   const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-    '-i', wav, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '20',
+    '-i', wav, '-vf', 'scale=1280:720', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '20',
     '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', OUT], { stdio: ['pipe', 'inherit', 'inherit'] });
 
   const frames = Math.ceil(dur * FPS);
