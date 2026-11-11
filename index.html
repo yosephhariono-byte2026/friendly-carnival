@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Penjaga Nusantara</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Figtree:wght@400;600;800&display=swap">
+<style>
+/* Layout: one screen. A slim score rail on top, the kelir (shadow-puppet screen) filling the middle, touch controls below. */
+:root {
+  color-scheme: dark;
+  --nila: #0d1326;        /* batik indigo, page ground */
+  --nila-2: #18203c;      /* raised surfaces */
+  --garis: #2c365c;       /* hairlines on indigo */
+  --emas: #e9b44c;        /* gilded prada accent */
+  --emas-redup: #a8823a;
+  --gading: #f6e7c4;      /* ivory text */
+  --gading-redup: #b9ad93;
+  --tinta: #24120a;       /* puppet ink */
+  --merah: #c8372d;
+  --font-display: "Yatra One", "Georgia", "Times New Roman", serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+body {
+  background: var(--nila);
+  color: var(--gading);
+  font-family: var(--font-body);
+  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.rail {
+  display: flex; align-items: center; gap: 8px 18px; flex-wrap: wrap;
+  width: 100%; max-width: 620px; margin-inline: auto;
+}
+.rail h1 {
+  font-family: var(--font-display); font-weight: 400; font-size: 20px;
+  margin: 0; color: var(--emas); letter-spacing: .01em; margin-right: auto;
+}
+.stat { display: flex; flex-direction: column; line-height: 1.15; }
+.stat span { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gading-redup); }
+.stat b { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.btn-kecil {
+  font: 600 13px var(--font-body); color: var(--gading);
+  background: var(--nila-2); border: 1px solid var(--garis); border-radius: 999px;
+  padding: 7px 12px; cursor: pointer;
+}
+.btn-kecil:hover { border-color: var(--emas-redup); }
+button:focus-visible { outline: 2px solid var(--emas); outline-offset: 2px; }
+
+.stage { flex: 1; min-height: 0; display: grid; place-items: center; }
+.frame {
+  position: relative; width: 300px; height: 400px;
+  border: 3px solid var(--emas-redup);
+  outline: 1px solid var(--tinta); outline-offset: -6px;
+  box-shadow: 0 0 0 6px var(--tinta), 0 0 60px rgba(233, 180, 76, .18);
+  background: var(--tinta);
+}
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+.layar {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; text-align: center;
+  padding: 18px; background: rgba(13, 10, 8, .78); color: var(--gading);
+  overflow-y: auto;
+}
+.layar h2 {
+  font-family: var(--font-display); font-weight: 400; color: var(--emas);
+  font-size: clamp(30px, 9vw, 46px); line-height: 1.02; margin: 0; text-wrap: balance;
+}
+.layar p { margin: 0; max-width: 34ch; line-height: 1.45; color: var(--gading); }
+.layar .kecil { font-size: 13px; color: var(--gading-redup); }
+.pusaka { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; text-align: left; font-size: 13px; margin: 0; }
+.pusaka dt { color: var(--emas); font-weight: 800; }
+.pusaka dd { margin: 0; color: var(--gading); }
+.btn-utama {
+  font: 800 17px var(--font-body); letter-spacing: .04em;
+  color: var(--tinta); background: var(--emas); border: 0; border-radius: 4px;
+  padding: 13px 34px; cursor: pointer; box-shadow: 0 4px 0 var(--emas-redup);
+}
+.btn-utama:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--emas-redup); }
+
+.kendali { display: none; gap: 10px; width: 100%; max-width: 620px; margin-inline: auto; }
+.kendali button {
+  font: 800 20px var(--font-body); color: var(--gading);
+  background: var(--nila-2); border: 1px solid var(--garis); border-radius: 12px;
+  height: 58px; flex: 1; touch-action: none;
+}
+.kendali button.tekan { background: var(--emas); color: var(--tinta); }
+.kendali .panah { flex: 1.6; color: var(--emas); border-color: var(--emas-redup); font-size: 16px; letter-spacing: .08em; }
+@media (pointer: coarse) { .kendali { display: flex; } }
+</style>
+
+<header class="rail">
+  <h1>Penjaga Nusantara</h1>
+  <div class="stat"><span>Skor</span><b id="skor">0</b></div>
+  <div class="stat"><span>Rekor</span><b id="rekor">0</b></div>
+  <div class="stat"><span>Nyawa</span><b id="nyawa">3</b></div>
+  <button class="btn-kecil" id="btn-jeda" type="button">Jeda</button>
+  <button class="btn-kecil" id="btn-suara" type="button">Suara: nyala</button>
+</header>
+
+<main class="stage" id="stage">
+  <div class="frame" id="frame">
+    <canvas id="kelir" aria-label="Layar permainan Penjaga Nusantara"></canvas>
+    <div class="layar" id="layar">
+      <h2 id="layar-judul">Penjaga Nusantara</h2>
+      <p id="layar-teks">Bala Buto, Leak, dan Kalong turun ke kelir. Terbangkan Garuda, lepaskan panah, dan jaga tujuh pulau dari Sumatra sampai Papua.</p>
+      <dl class="pusaka" id="layar-pusaka">
+        <dt>Keris</dt><dd>Panah menembus barisan musuh</dd>
+        <dt>Gong</dt><dd>Musuh terpaku beberapa detik</dd>
+        <dt>Payung</dt><dd>Menahan satu serangan</dd>
+        <dt>Kendi</dt><dd>Tambah satu nyawa</dd>
+      </dl>
+      <button class="btn-utama" id="btn-mulai" type="button">Mulai</button>
+      <p class="kecil" id="layar-kendali">Panah kiri/kanan atau A/D untuk bergerak, Spasi untuk memanah, P untuk jeda. Di layar sentuh, geser jari di kelir.</p>
+    </div>
+  </div>
+</main>
+
+<div class="kendali" id="kendali">
+  <button type="button" id="k-kiri" aria-label="Gerak kiri">&#9664;</button>
+  <button type="button" id="k-kanan" aria-label="Gerak kanan">&#9654;</button>
+  <button type="button" id="k-panah" class="panah">PANAH</button>
+</div>
+
+<script>
+(() => {
+'use strict';
+const W = 480, H = 640, G = 612;            // logical size, ground line
+const INK = '#24120a', GOLD = '#ffd98a', RED = '#b3261e';
+const cv = document.getElementById('kelir'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+const frame = $('frame'), stage = $('stage'), layar = $('layar');
+const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+const PULAU = [
+  { nama: 'Sumatra',    a: '#ffe7a8', b: '#c9812a', pola: ['011111110','111111111','111111111','111111111'] },
+  { nama: 'Jawa',       a: '#ffdf9c', b: '#a8591f', pola: ['111111111','111111111','111111111','111111111','111111111'] },
+  { nama: 'Bali',       a: '#ffe3b5', b: '#c2553a', pola: ['001111100','011111110','111111111','111111111','110111011'] },
+  { nama: 'Kalimantan', a: '#f1eaa6', b: '#6f8a34', pola: ['111101111','111101111','111101111','111101111','111101111'] },
+  { nama: 'Sulawesi',   a: '#eaf0c0', b: '#3f8f86', pola: ['101010101','111111111','010101010','111111111','101010101'] },
+  { nama: 'Maluku',     a: '#ffe6c2', b: '#cf6a52', pola: ['111111111','111000111','111000111','111111111','111111111'] },
+  { nama: 'Papua',      a: '#f7e2cf', b: '#8a5a9c', pola: ['111111111','111111111','111111111','111111111','111111111','111111111'] },
+];
+const CW = 40, RH = 34, PY = 586;
+
+/* ---------- state ---------- */
+let mode = 'title', time = 0, level = 1, score = 0, lives = 3, hi = 0;
+let F, enemies, shots, bolts, parts, texts, drops, shields, naga, P;
+let banner = null, inter = null, fireT = 0, diveT = 0, nagaT = 0, beatT = 0, beatN = 0, flap = 0, shake = 0;
+let freeze = 0, keris = 0, hold = 0, overT = 0;
+const keys = { l: false, r: false, f: false };
+let ptr = null;                              // pointer drag target x
+
+try { hi = +localStorage.getItem('penjaga-rekor') || 0; } catch (e) {}
+
+/* ---------- audio: bell-like tones on a slendro-flavoured scale ---------- */
+let ac = null, muted = false;
+const LARAS = [262, 300, 345, 396, 455, 524];
+function wake() {
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (ac && ac.state === 'suspended') ac.resume();
+}
+function osc(f, d, v, type, f2) {
+  if (!ac || muted) return;
+  const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + 0.02);
+}
+const bell = (f, d = 0.5, v = 0.1) => { osc(f, d, v); osc(f * 2.76, d * 0.5, v * 0.35); osc(f * 5.4, d * 0.25, v * 0.12); };
+const gong = () => { osc(98, 2.2, 0.3); osc(101, 2.2, 0.2); osc(196, 1.2, 0.08); };
+const thump = (f, v = 0.16) => osc(f, 0.14, v, 'sine', f * 0.5);
+
+/* ---------- setup ---------- */
+function buildShields() {
+  const hw = [0, 1, 2, 3, 4, 5, 6, 7, 7, 7, 6, 4, 4];
+  shields = [96, 240, 384].map(cx => {
+    const cells = new Uint8Array(15 * 13);
+    for (let r = 0; r < 13; r++) for (let c = 0; c < 15; c++) if (Math.abs(c - 7) <= hw[r]) cells[r * 15 + c] = 1;
+    return { x: cx - 30, y: 484, cells };
+  });
+}
+function setupLevel() {
+  const isl = PULAU[(level - 1) % 7], putaran = Math.floor((level - 1) / 7);
+  enemies = [];
+  isl.pola.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch !== '1') return;
+    const type = r === 0 ? 'leak' : r <= 2 ? 'buto' : 'kalong';
+    enemies.push({ c, r, type, hp: type === 'buto' && level > 1 ? 2 : 1, x: 0, y: 0, dv: null, hit: 0 });
+  }));
+  F = { x: 80, y: 86 + Math.min(level, 5) * 5, dir: 1, drop: 0, total: enemies.length, base: 20 + level * 3 + putaran * 8 };
+  shots = []; bolts = []; drops = []; naga = null;
+  buildShields();
+  fireT = 2; diveT = rnd(5, 8); nagaT = rnd(10, 16); freeze = 0; hold = 1.6;
+  banner = { t: 2.2, a: (putaran ? 'Putaran ' + (putaran + 1) + ' · ' : '') + 'Babak ' + level, b: isl.nama };
+}
+function newGame() {
+  score = 0; lives = 3; level = 1; keris = 0; parts = []; texts = []; inter = null; overT = 0;
+  P = { x: W / 2, cool: 0, dead: 0, inv: 0, payung: false };
+  setupLevel(); mode = 'play'; layar.hidden = true; hud();
+  bell(LARAS[0], 0.6); setTimeout(() => bell(LARAS[2], 0.6), 140); setTimeout(() => bell(LARAS[4], 0.9), 280);
+}
+function titleScene() {
+  level = 1; parts = []; texts = []; P = { x: W / 2, cool: 0, dead: 0, inv: 0, payung: false };
+  setupLevel(); banner = null;
+}
+function hud() {
+  $('skor').textContent = score; $('rekor').textContent = Math.max(hi, score); $('nyawa').textContent = Math.max(lives, 0);
+}
+function addScore(n, x, y, label) {
+  score += n; texts.push({ x, y, t: 0.9, s: label || '+' + n }); hud();
+}
+function burst(x, y, n, col) {
+  if (calm) n = Math.ceil(n / 3);
+  for (let i = 0; i < n; i++) {
+    const a = rnd(0, 6.28), v = rnd(30, 150);
+    parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: rnd(0.3, 0.7), col: col || INK, s: rnd(2, 4) });
+  }
+}
+
+/* ---------- update ---------- */
+function alive() { return enemies.length; }
+function moveFormation(dt, canDrop) {
+  let minC = 9, maxC = -1;
+  for (const e of enemies) { if (e.c < minC) minC = e.c; if (e.c > maxC) maxC = e.c; }
+  if (maxC < 0) return 1;
+  const mul = 1 + 3.6 * Math.pow(1 - alive() / F.total, 1.6);
+  if (F.drop > 0) { const d = Math.min(F.drop, 70 * dt); F.y += d; F.drop -= d; }
+  else {
+    F.x += F.dir * F.base * mul * dt;
+    if (F.x + maxC * CW > W - 24 && F.dir > 0) { F.dir = -1; if (canDrop) F.drop = 15; }
+    if (F.x + minC * CW < 24 && F.dir < 0) { F.dir = 1; if (canDrop) F.drop = 15; }
+  }
+  return mul;
+}
+function place() {
+  for (const e of enemies) if (!e.dv) { e.x = F.x + e.c * CW; e.y = F.y + e.r * RH + Math.sin(time * 2 + e.c * 0.7) * 2; }
+}
+function shieldHit(x, y, rad) {
+  for (const s of shields) {
+    const c = Math.floor((x - s.x) / 4), r = Math.floor((y - s.y) / 4);
+    if (c < 0 || c > 14 || r < 0 || r > 12 || !s.cells[r * 15 + c]) continue;
+    for (let rr = r - 2; rr <= r + 2; rr++) for (let cc = c - 2; cc <= c + 2; cc++) {
+      if (cc < 0 || cc > 14 || rr < 0 || rr > 12) continue;
+      if (Math.hypot(cc - c, rr - r) <= rad + Math.random() * 0.7) s.cells[rr * 15 + cc] = 0;
+    }
+    burst(x, y, 4);
+    return true;
+  }
+  return false;
+}
+function killEnemy(e, i) {
+  enemies.splice(i, 1);
+  const pts = e.dv ? 30 : e.type === 'leak' ? 40 : e.type === 'buto' ? 20 : 10;
+  addScore(pts, e.x, e.y);
+  burst(e.x, e.y, 12); burst(e.x, e.y, 5, GOLD);
+  bell(LARAS[(5 - Math.min(e.r, 5))], 0.35, 0.09);
+  if (Math.random() < 0.045) dropItem(e.x, e.y);
+}
+function dropItem(x, y) {
+  const r = Math.random();
+  const kind = r < 0.36 ? 'keris' : r < 0.64 ? 'gong' : r < 0.9 ? 'payung' : 'kendi';
+  drops.push({ x, y, kind });
+}
+function hurtPlayer() {
+  if (P.inv > 0 || P.dead > 0) return;
+  if (P.payung) { P.payung = false; P.inv = 1; burst(P.x, PY, 14, GOLD); bell(LARAS[5], 0.4); texts.push({ x: P.x, y: PY - 30, t: 1, s: 'Payung menahan!' }); return; }
+  lives--; hud(); P.dead = 1.4; keris = 0; bolts = [];
+  burst(P.x, PY, 26); burst(P.x, PY, 10, RED); gong(); if (!calm) shake = 0.5;
+}
+function gameOver(reason) {
+  mode = 'over';
+  if (score > hi) { hi = score; try { localStorage.setItem('penjaga-rekor', String(hi)); } catch (e) {} }
+  hud(); gong();
+  $('layar-judul').textContent = 'Lakon Usai';
+  $('layar-teks').textContent = reason + ' Skor ' + score + ', sampai Babak ' + level + ' (' + PULAU[(level - 1) % 7].nama + '). Rekor ' + hi + '.';
+  $('layar-pusaka').hidden = true; $('layar-kendali').hidden = true;
+  $('btn-mulai').textContent = 'Main lagi'; layar.hidden = false; $('btn-mulai').focus();
+}
+
+function update(dt) {
+  time += dt;
+  if (mode === 'title' || mode === 'over') { if (mode === 'title') { moveFormation(dt, false); place(); } stepFx(dt); return; }
+  if (mode !== 'play') return;
+  if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
+  if (shake > 0) shake -= dt;
+  if (keris > 0) keris -= dt;
+  if (hold > 0) hold -= dt;
+
+  // player
+  if (P.dead > 0) {
+    P.dead -= dt;
+    if (P.dead <= 0) { if (lives <= 0) { gameOver('Garuda gugur.'); return; } P.inv = 2.2; P.x = W / 2; }
+  } else {
+    if (P.inv > 0) P.inv -= dt;
+    const mv = (keys.l ? -1 : 0) + (keys.r ? 1 : 0);
+    if (mv) { P.x += mv * 270 * dt; ptr = ptr && null; }
+    else if (ptr !== null) { const d = ptr - P.x; P.x += clamp(d, -460 * dt, 460 * dt); }
+    P.x = clamp(P.x, 24, W - 24);
+    P.cool -= dt;
+    const maxShots = keris > 0 ? 4 : 2;
+    if ((keys.f || ptr !== null) && P.cool <= 0 && shots.length < maxShots && !inter) {
+      shots.push({ x: P.x, y: PY - 18, pierce: keris > 0 });
+      P.cool = keris > 0 ? 0.2 : 0.34; osc(880, 0.09, 0.05, 'triangle', 1500);
+    }
+  }
+
+  // level cleared
+  if (inter) {
+    inter.t -= dt; stepFx(dt); stepShots(dt);
+    if (inter.t <= 0) { inter = null; level++; setupLevel(); }
+    return;
+  }
+
+  // formation
+  let mul = 1;
+  if (freeze > 0) freeze -= dt;
+  else {
+    mul = moveFormation(dt, true);
+    beatT -= dt;
+    if (beatT <= 0) { beatT = clamp(0.8 / mul, 0.13, 0.8); flap ^= 1; thump(beatN++ % 2 ? 88 : 66); }
+  }
+  place();
+
+  // divers
+  if (freeze <= 0) {
+    if (level > 1 && hold <= 0 && P.dead <= 0) {
+      diveT -= dt;
+      if (diveT <= 0) {
+        diveT = rnd(3.5, 7) / (1 + level * 0.08);
+        const pool = enemies.filter(e => e.type === 'kalong' && !e.dv);
+        if (pool.length) { const e = pool[Math.floor(Math.random() * pool.length)]; e.dv = { ph: 0, t: 0 }; osc(700, 0.35, 0.05, 'sawtooth', 240); }
+      }
+    }
+    for (const e of enemies) if (e.dv) {
+      e.dv.t += dt;
+      if (e.dv.ph === 0) {
+        e.y += 165 * dt; e.x += Math.cos(e.dv.t * 4) * 95 * dt + Math.sign(P.x - e.x) * 45 * dt;
+        e.x = clamp(e.x, 14, W - 14);
+        if (e.y > H + 20) { e.dv.ph = 1; e.y = -20; e.x = F.x + e.c * CW; }
+      } else {
+        const tx = F.x + e.c * CW, ty = F.y + e.r * RH;
+        e.x += clamp(tx - e.x, -200 * dt, 200 * dt); e.y += 190 * dt;
+        if (e.y >= ty) e.dv = null;
+      }
+    }
+  }
+
+  // enemy fire
+  if (freeze <= 0 && hold <= 0 && P.dead <= 0) {
+    fireT -= dt;
+    if (fireT <= 0 && bolts.length < 3 + Math.floor(level / 2)) {
+      fireT = Math.max(0.32, 1.25 - level * 0.09) * rnd(0.6, 1.4);
+      const cols = {};
+      for (const e of enemies) if (!e.dv && (!cols[e.c] || cols[e.c].r < e.r)) cols[e.c] = e;
+      const front = Object.values(cols);
+      if (front.length) {
+        const e = front[Math.floor(Math.random() * front.length)], sp = 165 + level * 9;
+        const vx = e.type === 'leak' ? clamp((P.x - e.x) * 0.35, -60, 60) : 0;
+        bolts.push({ x: e.x, y: e.y + 12, vx, vy: sp, leak: e.type === 'leak' });
+      }
+    }
+  }
+
+  // naga
+  if (!naga) {
+    nagaT -= dt;
+    if (nagaT <= 0 && F.y > 80) { const d = Math.random() < 0.5 ? 1 : -1; naga = { x: d > 0 ? -70 : W + 70, d }; osc(180, 0.8, 0.05, 'sawtooth', 320); }
+  } else {
+    naga.x += naga.d * 95 * dt;
+    if (naga.x < -90 || naga.x > W + 90) { naga = null; nagaT = rnd(16, 26); }
+  }
+
+  stepShots(dt);
+
+  // enemy bolts
+  for (let i = bolts.length - 1; i >= 0; i--) {
+    const b = bolts[i]; b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.y > G || shieldHit(b.x, b.y + 4, 1.5)) { bolts.splice(i, 1); continue; }
+    if (P.dead <= 0 && Math.abs(b.x - P.x) < 16 && Math.abs(b.y - PY) < 13) { bolts.splice(i, 1); hurtPlayer(); }
+  }
+
+  // enemies touching things
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const e = enemies[i];
+    if (e.hit > 0) e.hit -= dt;
+    if (e.y > 470 && e.y < 545) shieldHit(e.x, e.y + 8, 2.2);
+    if (P.dead <= 0 && Math.abs(e.x - P.x) < 24 && Math.abs(e.y - PY) < 20) {
+      if (e.dv) { enemies.splice(i, 1); burst(e.x, e.y, 12); } hurtPlayer();
+    }
+    if (!e.dv && e.y + 12 >= PY - 16) { lives = 0; hud(); burst(P.x, PY, 26); gameOver('Bala raksasa menembus pertahanan.'); return; }
+  }
+
+  // drops
+  for (let i = drops.length - 1; i >= 0; i--) {
+    const d = drops[i]; d.y += 95 * dt;
+    if (d.y > G + 10) { drops.splice(i, 1); continue; }
+    if (P.dead <= 0 && Math.abs(d.x - P.x) < 26 && Math.abs(d.y - PY) < 20) {
+      drops.splice(i, 1); let msg = '';
+      if (d.kind === 'keris') { keris = 9; msg = 'Keris sakti!'; }
+      else if (d.kind === 'gong') { freeze = 4.5; msg = 'Gong! Musuh terpaku'; gong(); }
+      else if (d.kind === 'payung') { P.payung = true; msg = 'Payung pelindung'; }
+      else { if (lives < 5) { lives++; msg = 'Nyawa +1'; } else { score += 200; msg = '+200'; } hud(); }
+      texts.push({ x: clamp(P.x, 70, W - 70), y: PY - 34, t: 1.3, s: msg });
+      bell(LARAS[3], 0.5); setTimeout(() => bell(LARAS[5], 0.7), 90);
+    }
+  }
+
+  stepFx(dt);
+
+  if (!alive() && !inter) {
+    const isl = PULAU[(level - 1) % 7];
+    inter = { t: 2.4, a: isl.nama + ' aman', b: 'Bonus +' + level * 100 };
+    score += level * 100; hud(); bolts = []; naga = null;
+    [0, 2, 3, 5].forEach((n, k) => setTimeout(() => bell(LARAS[n], 0.7), k * 130));
+  }
+}
+function stepShots(dt) {
+  for (let i = shots.length - 1; i >= 0; i--) {
+    const s = shots[i]; s.y -= 540 * dt;
+    if (s.y < -10) { shots.splice(i, 1); continue; }
+    if (shieldHit(s.x, s.y, 1.2)) { shots.splice(i, 1); continue; }
+    if (naga && Math.abs(s.x - naga.x) < 34 && Math.abs(s.y - 52) < 14) {
+      const pts = [100, 150, 200, 300][Math.floor(Math.random() * 4)];
+      addScore(pts, naga.x, 52); burst(naga.x, 52, 22); burst(naga.x, 52, 12, GOLD);
+      dropItem(clamp(naga.x, 30, W - 30), 60); bell(LARAS[5] * 2, 0.8); naga = null; nagaT = rnd(16, 26);
+      shots.splice(i, 1); continue;
+    }
+    let gone = false;
+    for (let j = enemies.length - 1; j >= 0; j--) {
+      const e = enemies[j];
+      if (Math.abs(s.x - e.x) < 14 && Math.abs(s.y - e.y) < 13) {
+        if (s.last === e) continue;
+        if (--e.hp <= 0) killEnemy(e, j); else { e.hit = 0.15; burst(e.x, e.y - 8, 5, GOLD); osc(240, 0.1, 0.07, 'square'); }
+        if (s.pierce) s.last = e; else { gone = true; break; }
+      }
+    }
+    if (gone) { shots.splice(i, 1); continue; }
+    for (let j = bolts.length - 1; j >= 0; j--) {
+      const b = bolts[j];
+      if (Math.abs(s.x - b.x) < 6 && Math.abs(s.y - b.y) < 10) { bolts.splice(j, 1); burst(b.x, b.y, 5, RED); if (!s.pierce) { shots.splice(i, 1); } break; }
+    }
+  }
+}
+function stepFx(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt;
+    if (p.t <= 0) parts.splice(i, 1);
+  }
+  for (let i = texts.length - 1; i >= 0; i--) { const t = texts[i]; t.t -= dt; t.y -= 26 * dt; if (t.t <= 0) texts.splice(i, 1); }
+}
+
+/* ---------- drawing: everything is a shadow puppet on a lamp-lit cloth ---------- */
+function poly(pts, mirror) {
+  ctx.beginPath(); ctx.moveTo(pts[0], pts[1]);
+  for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]);
+  if (mirror) for (let i = pts.length - 2; i >= 0; i -= 2) ctx.lineTo(-pts[i], pts[i + 1]);
+  ctx.closePath(); ctx.fill();
+}
+function dot(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); }
+
+function drawGaruda(x, y) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = INK;
+  poly([0, -18, 4, -9, 10, -8, 24, -14, 19, -4, 24, 1, 16, 3, 19, 10, 9, 8, 5, 15, 0, 10], true);
+  ctx.fillStyle = GOLD;
+  poly([0, -13, 2, -9, 0, -6], true); dot(0, 1, 2.6);
+  poly([9, -3, 16, -6, 13, -1], false); poly([-9, -3, -16, -6, -13, -1], false);
+  if (keris > 0) { ctx.fillStyle = RED; dot(0, -19, 2.4); }
+  if (P.payung) {
+    ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 2, 30, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+    ctx.strokeStyle = GOLD; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 2, 30, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawKalong(e) {
+  const up = (flap ^ (e.c & 1)) || e.dv ? -6 : 3;
+  ctx.fillStyle = INK;
+  poly([0, -5, 4, -8, 5, -3, 10, -5 + up * 0.4, 15, up - 4, 14, up + 4, 10, 2, 7, 6, 4, 3, 2, 8, 0, 5], true);
+  ctx.fillStyle = e.dv ? RED : GOLD; dot(-2.2, -2, 1.3); dot(2.2, -2, 1.3);
+}
+function drawButo(e) {
+  ctx.fillStyle = INK;
+  dot(0, 1, 11);
+  if (e.hp > 1 || level === 1) poly([0, -18, 3, -11, 7, -15, 9, -8, 13, -9, 11, -2], true);
+  else poly([4, -12, 7, -15, 9, -8, 13, -9, 11, -2], true);
+  poly([10, -2, 15, 2, 11, 6], false); poly([-10, -2, -15, 2, -11, 6], false);
+  ctx.fillStyle = GOLD; dot(-4.2, -2, 3.1); dot(4.2, -2, 3.1);
+  poly([-6, 5, -4, 10, -2, 5], false); poly([6, 5, 4, 10, 2, 5], false);
+  ctx.fillStyle = e.hit > 0 ? GOLD : RED; dot(-4.2, -2, 1.4); dot(4.2, -2, 1.4);
+  if (e.hp === 1 && level > 1) { ctx.strokeStyle = GOLD; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-1, -10); ctx.lineTo(2, -5); ctx.lineTo(-1, -1); ctx.stroke(); }
+}
+function drawLeak(e) {
+  const w = Math.sin(time * 9 + e.c) * 1.6;
+  ctx.fillStyle = INK;
+  poly([0, -17 + w, 3, -9, 8, -15 - w, 8, -6, 14, -9 + w, 11, -1, 15, 4 - w, 9, 5, 6, 10, 0, 8], true);
+  ctx.fillStyle = RED; poly([-2, 5, 2, 5, 1.5, 13 + w * 0.5, 0, 15 + w * 0.5, -1.5, 13 + w * 0.5], false);
+  ctx.fillStyle = GOLD; poly([-7, -3, -2, -1, -6, 1], false); poly([7, -3, 2, -1, 6, 1], false);
+}
+function drawNaga(n) {
+  ctx.save(); ctx.translate(n.x, 52);
+  for (let i = 5; i >= 1; i--) {
+    const sx = -n.d * i * 12, sy = Math.sin(time * 6 + i * 0.9) * 5;
+    ctx.fillStyle = INK; dot(sx, sy, 8.5 - i); ctx.fillStyle = GOLD; dot(sx, sy, 1.6);
+    if (i === 5) { ctx.fillStyle = INK; poly([sx, sy - 3, sx - n.d * 12, sy - 6, sx - n.d * 9, sy, sx - n.d * 12, sy + 6, sx, sy + 3], false); }
+  }
+  ctx.scale(n.d, 1); ctx.fillStyle = INK;
+  poly([-8, -9, 2, -10, 4, -17, 8, -9, 18, -3, 20, 2, 12, 8, 2, 9, -8, 8], false);
+  ctx.fillStyle = GOLD; dot(8, -2, 2.2); poly([13, 3, 19, 2, 13, 6], false);
+  ctx.fillStyle = RED; dot(8, -2, 1);
+  ctx.restore();
+}
+function drawDrop(d) {
+  ctx.save(); ctx.translate(d.x, d.y + Math.sin(time * 6 + d.x) * 1.5);
+  ctx.fillStyle = INK; dot(0, 0, 12); ctx.fillStyle = GOLD; dot(0, 0, 10); ctx.fillStyle = INK;
+  ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  if (d.kind === 'keris') { ctx.beginPath(); ctx.moveTo(0, -7); ctx.quadraticCurveTo(4, -3, 0, -1); ctx.quadraticCurveTo(-4, 2, 0, 5); ctx.stroke(); ctx.fillRect(-4, 5, 8, 2); }
+  else if (d.kind === 'gong') { ctx.beginPath(); ctx.arc(0, 0, 6, 0, 6.2832); ctx.stroke(); dot(0, 0, 2.2); }
+  else if (d.kind === 'payung') { ctx.beginPath(); ctx.arc(0, 0, 6.5, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 6); ctx.stroke(); }
+  else { dot(0, 2, 5); ctx.fillRect(-2, -7, 4, 5); ctx.fillRect(-3.5, -8, 7, 2); }
+  ctx.restore();
+}
+
+/* island skylines, faint, as painted scenery behind the action */
+const tri = (x, w, h) => poly([x - w / 2, G, x - 8, G - h, x - 3, G - h + 5, x + 4, G - h, x + w / 2, G], false);
+function palm(x, h) {
+  ctx.fillRect(x - 1.5, G - h, 3, h);
+  for (let k = -1; k <= 1; k += 2) for (let j = 0; j < 3; j++) { ctx.beginPath(); ctx.ellipse(x + k * (8 + j * 2), G - h + j * 4 - 2, 10, 2.6, k * (0.3 + j * 0.35), 0, 6.2832); ctx.fill(); }
+}
+const SKY = [
+  () => { tri(380, 190, 96); tri(300, 120, 60); // rumah gadang
+    ctx.beginPath(); ctx.moveTo(60, G - 70); ctx.quadraticCurveTo(84, G - 34, 110, G - 44); ctx.quadraticCurveTo(136, G - 34, 160, G - 70);
+    ctx.lineTo(148, G - 26); ctx.lineTo(72, G - 26); ctx.closePath(); ctx.fill(); ctx.fillRect(76, G - 26, 68, 26); palm(196, 52); },
+  () => { tri(90, 170, 104); // candi berundak
+    for (let i = 0; i < 4; i++) ctx.fillRect(330 - (70 - i * 15), G - 13 * (i + 1), 2 * (70 - i * 15), 13);
+    ctx.beginPath(); ctx.arc(330, G - 52, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(328, G - 78, 4, 16); palm(210, 44); },
+  () => { tri(400, 200, 112); // meru bertingkat
+    for (let i = 0; i < 5; i++) { const w = 46 - i * 8, y = G - 22 - i * 15; poly([120 - w, y, 120 - w * 0.5, y - 10, 120 + w * 0.5, y - 10, 120 + w, y], false); ctx.fillRect(120 - w * 0.35, y, w * 0.7, 6); }
+    ctx.fillRect(98, G - 22, 44, 22); palm(214, 48); palm(246, 36); },
+  () => { for (let i = 0; i < 9; i++) { const x = 20 + i * 56 + (i % 2) * 12, h = 70 + (i * 37 % 40); ctx.fillRect(x - 2, G - h, 4, h); dot(x, G - h, 17); dot(x - 11, G - h + 9, 12); dot(x + 12, G - h + 8, 13); } // hutan, rumah panjang
+    ctx.fillRect(170, G - 30, 150, 18); poly([160, G - 30, 245, G - 50, 330, G - 30], false); for (let i = 0; i < 6; i++) ctx.fillRect(176 + i * 27, G - 12, 4, 12); },
+  () => { tri(70, 150, 84); // tongkonan
+    for (const x of [250, 370]) { ctx.beginPath(); ctx.moveTo(x - 58, G - 76); ctx.quadraticCurveTo(x, G - 30, x + 58, G - 76); ctx.lineTo(x + 30, G - 34); ctx.lineTo(x - 30, G - 34); ctx.closePath(); ctx.fill();
+      ctx.fillRect(x - 22, G - 34, 44, 20); ctx.fillRect(x - 20, G - 14, 4, 14); ctx.fillRect(x + 16, G - 14, 4, 14); } },
+  () => { tri(110, 120, 92); tri(410, 90, 64); // pulau rempah dan perahu
+    ctx.beginPath(); ctx.moveTo(210, G - 14); ctx.quadraticCurveTo(260, G + 8, 310, G - 14); ctx.closePath(); ctx.fill();
+    ctx.fillRect(258, G - 70, 3, 58); poly([262, G - 68, 300, G - 22, 262, G - 22], false); poly([256, G - 60, 226, G - 22, 256, G - 22], false); palm(60, 40); },
+  () => { tri(240, 300, 130); tri(90, 180, 86); tri(400, 170, 96); // honai
+    for (const x of [150, 320]) { ctx.beginPath(); ctx.arc(x, G - 20, 26, Math.PI, 0); ctx.fill(); poly([x - 8, G - 42, x, G - 54, x + 8, G - 42], false); ctx.fillRect(x - 22, G - 20, 44, 20); } },
+];
+function drawBackdrop() {
+  const isl = PULAU[(level - 1) % 7];
+  const fl = calm ? 0 : Math.sin(time * 7) * 6 + Math.sin(time * 13.3) * 3;
+  const g = ctx.createRadialGradient(W / 2, 250, 30, W / 2, 300, 430 + fl);
+  g.addColorStop(0, '#fff6d8'); g.addColorStop(0.28, isl.a); g.addColorStop(0.8, isl.b); g.addColorStop(1, '#3a1e0e');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(58,28,10,0.2)'; SKY[(level - 1) % 7]();
+  ctx.fillStyle = INK; ctx.fillRect(0, G, W, H - G);
+  ctx.fillStyle = '#a8823a';
+  for (let x = 10; x < W; x += 20) poly([x, G + 8, x + 5, G + 14, x, G + 20, x - 5, G + 14], false);
+}
+function drawShields() {
+  for (const s of shields) for (let r = 0; r < 13; r++) for (let c = 0; c < 15; c++) {
+    if (!s.cells[r * 15 + c]) continue;
+    ctx.fillStyle = (c === 7 && r > 1 && r < 10) || ((c + r) % 4 === 0 && Math.abs(c - 7) > 1 && r > 4 && r < 10) ? '#8a5a1e' : INK;
+    ctx.fillRect(s.x + c * 4, s.y + r * 4, 4.4, 4.4);
+  }
+}
+function label(a, b) {
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(36,18,10,0.86)'; ctx.fillRect(0, 262, W, 96);
+  ctx.fillStyle = '#a8823a'; ctx.fillRect(0, 262, W, 2); ctx.fillRect(0, 356, W, 2);
+  ctx.fillStyle = '#f6e7c4'; ctx.font = '600 15px Figtree, system-ui, sans-serif'; ctx.fillText(a.toUpperCase(), W / 2, 292);
+  ctx.fillStyle = '#e9b44c'; ctx.font = '40px "Yatra One", Georgia, serif'; ctx.fillText(b, W / 2, 338);
+}
+function draw() {
+  ctx.save();
+  if (shake > 0) ctx.translate(rnd(-4, 4) * shake * 2, rnd(-4, 4) * shake * 2);
+  drawBackdrop();
+  drawShields();
+  if (naga) drawNaga(naga);
+  for (const e of enemies) {
+    ctx.save(); ctx.translate(e.x, e.y);
+    if (freeze > 0) ctx.globalAlpha = 0.55;
+    if (e.type === 'kalong') drawKalong(e); else if (e.type === 'buto') drawButo(e); else drawLeak(e);
+    ctx.restore();
+  }
+  for (const d of drops) drawDrop(d);
+  for (const s of shots) {
+    ctx.fillStyle = INK; ctx.fillRect(s.x - 1, s.y - 2, 2, 14); poly([s.x, s.y - 8, s.x + 3.5, s.y - 1, s.x - 3.5, s.y - 1], false);
+    if (s.pierce) { ctx.fillStyle = RED; poly([s.x, s.y - 8, s.x + 2, s.y - 3, s.x - 2, s.y - 3], false); }
+  }
+  for (const b of bolts) {
+    ctx.fillStyle = INK; dot(b.x, b.y, 5.5); poly([b.x - 4, b.y - 3, b.x, b.y - 15 - Math.sin(time * 30 + b.x) * 2, b.x + 4, b.y - 3], false);
+    ctx.fillStyle = b.leak ? '#ff5a3c' : RED; dot(b.x, b.y, 3.2);
+  }
+  if (mode !== 'over' && P.dead <= 0 && !(P.inv > 0 && Math.floor(time * 12) % 2)) drawGaruda(P.x, PY);
+  for (const p of parts) { ctx.globalAlpha = clamp(p.t * 2.5, 0, 1); ctx.fillStyle = p.col; ctx.fillRect(p.x, p.y, p.s, p.s); }
+  ctx.globalAlpha = 1; ctx.textAlign = 'center'; ctx.font = '800 13px Figtree, system-ui, sans-serif';
+  for (const t of texts) { ctx.globalAlpha = clamp(t.t * 2, 0, 1); ctx.fillStyle = INK; ctx.fillText(t.s, t.x + 1, t.y + 1); ctx.fillStyle = '#fff6d8'; ctx.fillText(t.s, t.x, t.y); }
+  ctx.globalAlpha = 1;
+  if (mode === 'play') {
+    ctx.font = '800 12px Figtree, system-ui, sans-serif'; ctx.fillStyle = '#e9b44c'; ctx.textAlign = 'left';
+    ctx.fillText('BABAK ' + level + ' · ' + PULAU[(level - 1) % 7].nama.toUpperCase(), 10, H - 8);
+    ctx.textAlign = 'right';
+    const fx = [keris > 0 ? 'KERIS ' + Math.ceil(keris) : '', freeze > 0 ? 'GONG ' + Math.ceil(freeze) : '', P.payung ? 'PAYUNG' : ''].filter(Boolean).join('  ·  ');
+    ctx.fillText(fx, W - 10, H - 8);
+    if (inter) label(inter.b, inter.a); else if (banner) label(banner.a, banner.b);
+  }
+  if (mode === 'pause') label('P atau tombol Jeda untuk lanjut', 'Jeda');
+  ctx.restore();
+}
+
+/* ---------- loop, sizing, input ---------- */
+let last = 0;
+function tick(ts) {
+  const dt = Math.min(0.033, (ts - last) / 1000 || 0); last = ts;
+  update(dt); draw(); requestAnimationFrame(tick);
+}
+function fit() {
+  const w = Math.max(160, Math.floor(Math.min(stage.clientWidth - 18, (stage.clientHeight - 18) * 0.75)));
+  frame.style.width = w + 'px'; frame.style.height = Math.round(w / 0.75) + 'px';
+  const k = Math.min(3, (window.devicePixelRatio || 1) * w / W);
+  cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+  ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+}
+function togglePause(force) {
+  if (mode === 'play' && force !== false) { mode = 'pause'; $('btn-jeda').textContent = 'Lanjut'; }
+  else if (mode === 'pause' && force !== true) { mode = 'play'; $('btn-jeda').textContent = 'Jeda'; }
+}
+function begin() { wake(); $('btn-jeda').textContent = 'Jeda'; newGame(); }
+
+addEventListener('resize', fit);
+if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);
+document.addEventListener('visibilitychange', () => { if (document.hidden) togglePause(true); });
+addEventListener('blur', () => { keys.l = keys.r = keys.f = false; });
+
+const MAP = { ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r', ' ': 'f', ArrowUp: 'f', w: 'f', W: 'f' };
+addEventListener('keydown', e => {
+  if (e.key in MAP) { keys[MAP[e.key]] = true; if (mode === 'play') e.preventDefault(); }
+  if (e.repeat) return;
+  if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') togglePause();
+  if (e.key === 'm' || e.key === 'M') $('btn-suara').click();
+  if (e.key === 'Enter' && (mode === 'title' || mode === 'over')) { e.preventDefault(); begin(); }
+});
+addEventListener('keyup', e => { if (e.key in MAP) keys[MAP[e.key]] = false; });
+
+const toX = e => { const r = cv.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width * W, 24, W - 24); };
+cv.addEventListener('pointerdown', e => { wake(); if (mode !== 'play') return; ptr = toX(e); try { cv.setPointerCapture(e.pointerId); } catch (x) {} });
+cv.addEventListener('pointermove', e => { if (ptr !== null) ptr = toX(e); });
+const endPtr = () => { ptr = null; };
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+
+[['k-kiri', 'l'], ['k-kanan', 'r'], ['k-panah', 'f']].forEach(([id, k]) => {
+  const b = $(id);
+  const on = e => { e.preventDefault(); wake(); keys[k] = true; b.classList.add('tekan'); };
+  const off = () => { keys[k] = false; b.classList.remove('tekan'); };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off);
+  b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+$('btn-mulai').addEventListener('click', begin);
+$('btn-jeda').addEventListener('click', e => { togglePause(); e.currentTarget.blur(); });
+$('btn-suara').addEventListener('click', e => {
+  muted = !muted; e.currentTarget.textContent = 'Suara: ' + (muted ? 'mati' : 'nyala'); e.currentTarget.blur();
+});
+
+titleScene(); hud(); fit();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
+requestAnimationFrame(tick);
+
+// test hook, used only by the automated smoke test
+window.__penjaga = { get s() { return { mode, level, score, lives, n: enemies.length }; }, clear() { enemies.length = 0; } };
+})();
+</script>
+</body>
+</html>
