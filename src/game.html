@@ -610,11 +610,11 @@ function draw() {
   for (const t of texts) { ctx.globalAlpha = clamp(t.t * 2, 0, 1); ctx.fillStyle = INK; ctx.fillText(t.s, t.x + 1, t.y + 1); ctx.fillStyle = '#fff6d8'; ctx.fillText(t.s, t.x, t.y); }
   ctx.globalAlpha = 1;
   if (mode === 'play') {
-    ctx.font = '800 12px Figtree, system-ui, sans-serif'; ctx.fillStyle = '#e9b44c'; ctx.textAlign = 'left';
-    ctx.fillText('BABAK ' + level + ' · ' + PULAU[(level - 1) % 7].nama.toUpperCase(), 10, H - 8);
+    ctx.font = '800 12px Figtree, system-ui, sans-serif'; ctx.fillStyle = 'rgba(36,18,10,0.8)'; ctx.textAlign = 'left';
+    ctx.fillText('BABAK ' + level + ' · ' + PULAU[(level - 1) % 7].nama.toUpperCase(), 12, 20);
     ctx.textAlign = 'right';
     const fx = [keris > 0 ? 'KERIS ' + Math.ceil(keris) : '', freeze > 0 ? 'GONG ' + Math.ceil(freeze) : '', P.payung ? 'PAYUNG' : ''].filter(Boolean).join('  ·  ');
-    ctx.fillText(fx, W - 10, H - 8);
+    ctx.fillText(fx, W - 12, 20);
     if (inter) label(inter.b, inter.a); else if (banner) label(banner.a, banner.b);
   }
   if (mode === 'pause') label('P atau tombol Jeda untuk lanjut', 'Jeda');
@@ -679,7 +679,5 @@ titleScene(); hud(); fit();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
 requestAnimationFrame(tick);
 
-// test hook, used only by the automated smoke test
-window.__penjaga = { get s() { return { mode, level, score, lives, n: enemies.length }; }, clear() { enemies.length = 0; } };
 })();
 </script>
