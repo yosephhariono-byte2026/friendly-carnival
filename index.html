@@ -168,24 +168,54 @@ let ptr = null;                              // pointer drag target x
 
 try { hi = +localStorage.getItem('penjaga-rekor') || 0; } catch (e) {}
 
-/* ---------- audio: bell-like tones on a slendro-flavoured scale ---------- */
-let ac = null, muted = false;
+/* ---------- audio: synth voices with echo, still tuned to a slendro-flavoured scale ---------- */
+let ac = null, muted = false, out = null, echo = null, grit = null;
 const LARAS = [262, 300, 345, 396, 455, 524];
+const BASS = [65, 65, 131, 65, 75, 65, 114, 57];
 function wake() {
-  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (!ac) {
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      out = ac.createDynamicsCompressor(); out.connect(ac.destination);
+      echo = ac.createDelay(1); echo.delayTime.value = 0.19;
+      const fb = ac.createGain(), lp = ac.createBiquadFilter();
+      fb.gain.value = 0.4; lp.type = 'lowpass'; lp.frequency.value = 2600;
+      echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(out);
+      grit = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const ch = grit.getChannelData(0); for (let k = 0; k < ch.length; k++) ch[k] = Math.random() * 2 - 1;
+    } catch (e) { ac = null; }
+  }
   if (ac && ac.state === 'suspended') ac.resume();
 }
-function osc(f, d, v, type, f2) {
+function voice(src, t, d, v, wet, f1, f2, ftype) {
+  const g = ac.createGain(); let node = src;
+  if (f1) {
+    const fl = ac.createBiquadFilter(); fl.type = ftype || 'lowpass'; fl.Q.value = 7;
+    fl.frequency.setValueAtTime(f1, t); fl.frequency.exponentialRampToValueAtTime(Math.max(60, f2 || f1 * 0.12), t + d);
+    src.connect(fl); node = fl;
+  }
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  node.connect(g); g.connect(out);
+  if (wet) { const s = ac.createGain(); s.gain.value = wet; g.connect(s); s.connect(echo); }
+  src.start(t); src.stop(t + d + 0.03);
+}
+function osc(f, d, v, type, f2, wet, cut) {
   if (!ac || muted) return;
-  const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+  const t = ac.currentTime, o = ac.createOscillator();
   o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
-  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + 0.02);
+  voice(o, t, d, v, wet, cut);
 }
-const bell = (f, d = 0.5, v = 0.1) => { osc(f, d, v); osc(f * 2.76, d * 0.5, v * 0.35); osc(f * 5.4, d * 0.25, v * 0.12); };
-const gong = () => { osc(98, 2.2, 0.3); osc(101, 2.2, 0.2); osc(196, 1.2, 0.08); };
-const thump = (f, v = 0.16) => osc(f, 0.14, v, 'sine', f * 0.5);
+function hiss(d, v, f1, f2, wet) {
+  if (!ac || muted) return;
+  const n = ac.createBufferSource(); n.buffer = grit; n.loop = true;
+  voice(n, ac.currentTime, d, v, wet, f1, f2, 'bandpass');
+}
+const bell = (f, d = 0.5, v = 0.1) => { osc(f, d, v * 0.7, 'sawtooth', 0, 0.5, f * 9); osc(f * 1.008, d, v * 0.7, 'sawtooth', 0, 0, f * 9); osc(f * 2, d * 0.4, v * 0.25, 'square', 0, 0.4); };
+const zap = () => { osc(1900, 0.13, 0.05, 'sawtooth', 170, 0.25); osc(950, 0.1, 0.035, 'square', 90); };
+const boom = () => hiss(0.22, 0.12, 2400, 300, 0.2);
+const gong = () => { osc(220, 1.6, 0.26, 'sawtooth', 28, 0.4, 1800); osc(110, 1.8, 0.28, 'sine', 24); hiss(1.2, 0.22, 3000, 120, 0.4); };
+const thump = f => { osc(f, 0.17, 0.15, 'sawtooth', 0, 0, f * 11); osc(f * 2, 0.05, 0.08, 'sine', f * 0.5); };
 
 /* ---------- setup ---------- */
 function buildShields() {
@@ -270,7 +300,7 @@ function killEnemy(e, i) {
   const pts = e.dv ? 30 : e.type === 'leak' ? 40 : e.type === 'buto' ? 20 : 10;
   addScore(pts, e.x, e.y);
   burst(e.x, e.y, 12); burst(e.x, e.y, 5, GOLD);
-  bell(LARAS[(5 - Math.min(e.r, 5))], 0.35, 0.09);
+  bell(LARAS[(5 - Math.min(e.r, 5))], 0.35, 0.09); boom();
   if (Math.random() < 0.045) dropItem(e.x, e.y);
 }
 function dropItem(x, y) {
@@ -317,7 +347,7 @@ function update(dt) {
     const maxShots = keris > 0 ? 4 : 2;
     if ((keys.f || ptr !== null) && P.cool <= 0 && shots.length < maxShots && !inter) {
       shots.push({ x: P.x, y: PY - 18, pierce: keris > 0 });
-      P.cool = keris > 0 ? 0.2 : 0.34; osc(880, 0.09, 0.05, 'triangle', 1500);
+      P.cool = keris > 0 ? 0.2 : 0.34; zap();
     }
   }
 
@@ -334,7 +364,7 @@ function update(dt) {
   else {
     mul = moveFormation(dt, true);
     beatT -= dt;
-    if (beatT <= 0) { beatT = clamp(0.8 / mul, 0.13, 0.8); flap ^= 1; thump(beatN++ % 2 ? 88 : 66); }
+    if (beatT <= 0) { beatT = clamp(0.8 / mul, 0.13, 0.8); flap ^= 1; thump(BASS[beatN++ % 8]); if (beatN % 2) hiss(0.04, 0.03, 9000, 7000); }
   }
   place();
 
@@ -345,7 +375,7 @@ function update(dt) {
       if (diveT <= 0) {
         diveT = rnd(3.5, 7) / (1 + level * 0.08);
         const pool = enemies.filter(e => e.type === 'kalong' && !e.dv);
-        if (pool.length) { const e = pool[Math.floor(Math.random() * pool.length)]; e.dv = { ph: 0, t: 0 }; osc(700, 0.35, 0.05, 'sawtooth', 240); }
+        if (pool.length) { const e = pool[Math.floor(Math.random() * pool.length)]; e.dv = { ph: 0, t: 0 }; osc(1400, 0.45, 0.05, 'sawtooth', 160, 0.3, 4000); }
       }
     }
     for (const e of enemies) if (e.dv) {
@@ -373,7 +403,7 @@ function update(dt) {
       if (front.length) {
         const e = front[Math.floor(Math.random() * front.length)], sp = 165 + level * 9;
         const vx = e.type === 'leak' ? clamp((P.x - e.x) * 0.35, -60, 60) : 0;
-        bolts.push({ x: e.x, y: e.y + 12, vx, vy: sp, leak: e.type === 'leak' });
+        bolts.push({ x: e.x, y: e.y + 12, vx, vy: sp, leak: e.type === 'leak' }); osc(520, 0.14, 0.03, 'square', 210, 0.15);
       }
     }
   }
@@ -381,7 +411,7 @@ function update(dt) {
   // naga
   if (!naga) {
     nagaT -= dt;
-    if (nagaT <= 0 && F.y > 80) { const d = Math.random() < 0.5 ? 1 : -1; naga = { x: d > 0 ? -70 : W + 70, d }; osc(180, 0.8, 0.05, 'sawtooth', 320); }
+    if (nagaT <= 0 && F.y > 80) { const d = Math.random() < 0.5 ? 1 : -1; naga = { x: d > 0 ? -70 : W + 70, d }; osc(160, 0.9, 0.06, 'sawtooth', 640, 0.5, 3000); osc(163, 0.9, 0.05, 'square', 652); }
   } else {
     naga.x += naga.d * 95 * dt;
     if (naga.x < -90 || naga.x > W + 90) { naga = null; nagaT = rnd(16, 26); }
