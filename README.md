@@ -22,3 +22,13 @@ Buka `index.html` di browser. Tidak perlu instalasi.
 ## Mengubah game
 
 Sumbernya ada di `src/game.html`. Jalankan `./build.sh` untuk membuat ulang `index.html`.
+
+## Game lain: Lintas Nusa
+
+Game balap arcade retro orisinal di `lintas-nusa/index.html`. Melaju dari Pantai Fajar, pilih jalur di tiap
+persimpangan, dan capai salah satu dari tiga tujuan akhir: Danau Senja, Kota Malam, atau Kawah Bintang.
+
+- Setir, gas, rem: panah atau WASD
+- Turbo: Spasi (terisi saat menyalip mepet)
+- Jeda: P, suara: M
+- Layar sentuh: tombol di bawah layar, gas otomatis
