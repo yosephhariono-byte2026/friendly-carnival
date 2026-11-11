@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Love Me Tender Tab Biola</title>
+<link rel="stylesheet" href="../tabplayer/player.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div id="ctl">
+    <button id="play">Putar</button>
+    <button id="restart">Ulang</button>
+    <label>Tempo <input id="tempo" type="range"> <span id="tv"></span></label>
+    <label><input id="sound" type="checkbox" checked> Suara</label>
+  </div>
+</div>
+<script>
+// Melodi Love Me Tender (Elvis Presley, 1956) mengikuti lagu "Aura Lea" (1861, domain publik).
+// Ditulis dari ingatan, tanpa lirik. G mayor, 4/4, ♩ = 76. Satuan durasi: 1/8 (birama = 8).
+window.SONG_CONFIG = {
+  kicker: "Elvis Presley",
+  title: "Love Me Tender",
+  subtitle: "melodi Aura Lea  \u00B7  G mayor  \u00B7  tab biola",
+  time: "4/4", keySig: ["F#"],
+  barLen: 8, beat: 2, tempo: 76,
+  sections: { 1:"Hitungan masuk", 2:"Verse", 10:"Chorus", 18:"Verse", 26:"Chorus", 34:"Penutup" },
+  bars: [
+    /* 1  */ "r8",
+    /* 2  */ "D4:2 G4:2 F#4:2 G4:2",
+    /* 3  */ "A4:2 E4:2 A4:4",
+    /* 4  */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 5  */ "G4:6 r2",
+    /* 6  */ "D4:2 G4:2 F#4:2 G4:2",
+    /* 7  */ "A4:2 E4:2 A4:4",
+    /* 8  */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 9  */ "G4:6 r2",
+    /* 10 */ "B4:2 B4:2 B4:2 B4:2",
+    /* 11 */ "B4:2 B4:2 B4:4",
+    /* 12 */ "B4:2 A4:2 G4:2 A4:2",
+    /* 13 */ "B4:6 r2",
+    /* 14 */ "B4:2 B4:2 C5:2 B4:2",
+    /* 15 */ "A4:2 E4:2 A4:4",
+    /* 16 */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 17 */ "G4:6 r2",
+    /* 18 */ "D4:2 G4:2 F#4:2 G4:2",
+    /* 19 */ "A4:2 E4:2 A4:4",
+    /* 20 */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 21 */ "G4:6 r2",
+    /* 22 */ "D4:2 G4:2 F#4:2 G4:2",
+    /* 23 */ "A4:2 E4:2 A4:4",
+    /* 24 */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 25 */ "G4:6 r2",
+    /* 26 */ "B4:2 B4:2 B4:2 B4:2",
+    /* 27 */ "B4:2 B4:2 B4:4",
+    /* 28 */ "B4:2 A4:2 G4:2 A4:2",
+    /* 29 */ "B4:6 r2",
+    /* 30 */ "B4:2 B4:2 C5:2 B4:2",
+    /* 31 */ "A4:2 E4:2 A4:4",
+    /* 32 */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 33 */ "G4:6 r2",
+    /* 34 */ "G4:2 F#4:2 E4:2 F#4:2",
+    /* 35 */ "G4:8",
+  ],
+};
+</script>
+<script src="../tabplayer/player.js"></script>
+</body>
+</html>
