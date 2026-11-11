@@ -6,7 +6,7 @@
 <style>body{margin:0}[hidden]{display:none!important}</style>
 <title>Penjaga Nusantara</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Figtree:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Figtree:wght@400;600;800&family=Press+Start+2P&display=swap">
 <style>
 /* Layout: one screen. A slim score rail on top, the kelir (shadow-puppet screen) filling the middle, touch controls below. */
 :root {
@@ -22,6 +22,8 @@
   --merah: #c8372d;
   --font-display: "Yatra One", "Georgia", "Times New Roman", serif;
   --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-piksel: "Press Start 2P", "Courier New", monospace;
+  --toska: #3fd6c0;       /* retro mode accent */
 }
 html, body { height: 100%; }
 body {
@@ -100,6 +102,18 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .kendali button.tekan { background: var(--emas); color: var(--tinta); }
 .kendali .panah { flex: 1.6; color: var(--emas); border-color: var(--emas-redup); font-size: 16px; letter-spacing: .08em; }
 @media (pointer: coarse) { .kendali { display: flex; } }
+
+/* retro style: black tube, pixel type, scanlines */
+.retro .rail h1 { font-family: var(--font-piksel); font-size: 12px; color: var(--toska); }
+.retro .frame { border-color: var(--garis); outline-color: #000; box-shadow: 0 0 0 6px #000, 0 0 50px rgba(63, 214, 192, .16); background: #000; }
+.retro .frame::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.26) 2px 3px);
+}
+.retro canvas { image-rendering: pixelated; }
+.retro .layar { background: rgba(0, 0, 0, .84); }
+.retro .layar h2 { font-family: var(--font-piksel); font-size: clamp(16px, 5.4vw, 24px); line-height: 1.5; color: var(--toska); }
+.retro .btn-utama { font-family: var(--font-piksel); font-size: 12px; border-radius: 0; }
 </style>
 
 <header class="rail">
@@ -109,6 +123,7 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
   <div class="stat"><span>Nyawa</span><b id="nyawa">3</b></div>
   <button class="btn-kecil" id="btn-jeda" type="button">Jeda</button>
   <button class="btn-kecil" id="btn-suara" type="button">Suara: nyala</button>
+  <button class="btn-kecil" id="btn-gaya" type="button">Gaya: wayang</button>
 </header>
 
 <main class="stage" id="stage">
@@ -124,7 +139,7 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
         <dt>Kendi</dt><dd>Tambah satu nyawa</dd>
       </dl>
       <button class="btn-utama" id="btn-mulai" type="button">Mulai</button>
-      <p class="kecil" id="layar-kendali">Panah kiri/kanan atau A/D untuk bergerak, Spasi untuk memanah, P untuk jeda. Di layar sentuh, geser jari di kelir.</p>
+      <p class="kecil" id="layar-kendali">Panah kiri/kanan atau A/D untuk bergerak, Spasi untuk memanah, P untuk jeda, G untuk ganti gaya wayang atau retro. Di layar sentuh, geser jari di kelir.</p>
     </div>
   </div>
 </main>
@@ -166,7 +181,8 @@ let freeze = 0, keris = 0, hold = 0, overT = 0;
 const keys = { l: false, r: false, f: false };
 let ptr = null;                              // pointer drag target x
 
-try { hi = +localStorage.getItem('penjaga-rekor') || 0; } catch (e) {}
+let retro = false;
+try { hi = +localStorage.getItem('penjaga-rekor') || 0; retro = localStorage.getItem('penjaga-gaya') === 'retro'; } catch (e) {}
 
 /* ---------- audio: synth voices with echo, still tuned to a slendro-flavoured scale ---------- */
 let ac = null, muted = false, out = null, echo = null, grit = null;
@@ -196,26 +212,26 @@ function voice(src, t, d, v, wet, f1, f2, ftype) {
   }
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
   node.connect(g); g.connect(out);
-  if (wet) { const s = ac.createGain(); s.gain.value = wet; g.connect(s); s.connect(echo); }
+  if (wet && !retro) { const s = ac.createGain(); s.gain.value = wet; g.connect(s); s.connect(echo); }
   src.start(t); src.stop(t + d + 0.03);
 }
 function osc(f, d, v, type, f2, wet, cut) {
   if (!ac || muted) return;
   const t = ac.currentTime, o = ac.createOscillator();
-  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
+  o.type = retro ? 'square' : type || 'sine'; o.frequency.setValueAtTime(f, t);
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
-  voice(o, t, d, v, wet, cut);
+  voice(o, t, d, retro ? v * 0.55 : v, wet, retro ? 0 : cut);
 }
 function hiss(d, v, f1, f2, wet) {
   if (!ac || muted) return;
   const n = ac.createBufferSource(); n.buffer = grit; n.loop = true;
   voice(n, ac.currentTime, d, v, wet, f1, f2, 'bandpass');
 }
-const bell = (f, d = 0.5, v = 0.1) => { osc(f, d, v * 0.7, 'sawtooth', 0, 0.5, f * 9); osc(f * 1.008, d, v * 0.7, 'sawtooth', 0, 0, f * 9); osc(f * 2, d * 0.4, v * 0.25, 'square', 0, 0.4); };
-const zap = () => { osc(1900, 0.13, 0.05, 'sawtooth', 170, 0.25); osc(950, 0.1, 0.035, 'square', 90); };
+const bell = (f, d = 0.5, v = 0.1) => { if (retro) { osc(f * 2, 0.07, v); setTimeout(() => osc(f * 3, 0.09, v), 60); return; } osc(f, d, v * 0.7, 'sawtooth', 0, 0.5, f * 9); osc(f * 1.008, d, v * 0.7, 'sawtooth', 0, 0, f * 9); osc(f * 2, d * 0.4, v * 0.25, 'square', 0, 0.4); };
+const zap = () => { if (retro) { osc(1300, 0.12, 0.06, 'square', 320); return; } osc(1900, 0.13, 0.05, 'sawtooth', 170, 0.25); osc(950, 0.1, 0.035, 'square', 90); };
 const boom = () => hiss(0.22, 0.12, 2400, 300, 0.2);
-const gong = () => { osc(220, 1.6, 0.26, 'sawtooth', 28, 0.4, 1800); osc(110, 1.8, 0.28, 'sine', 24); hiss(1.2, 0.22, 3000, 120, 0.4); };
-const thump = f => { osc(f, 0.17, 0.15, 'sawtooth', 0, 0, f * 11); osc(f * 2, 0.05, 0.08, 'sine', f * 0.5); };
+const gong = () => { if (retro) { osc(330, 0.9, 0.2, 'square', 40); hiss(0.7, 0.2, 1200, 200); return; } osc(220, 1.6, 0.26, 'sawtooth', 28, 0.4, 1800); osc(110, 1.8, 0.28, 'sine', 24); hiss(1.2, 0.22, 3000, 120, 0.4); };
+const thump = f => { if (retro) { osc(f, 0.09, 0.16); return; } osc(f, 0.17, 0.15, 'sawtooth', 0, 0, f * 11); osc(f * 2, 0.05, 0.08, 'sine', f * 0.5); };
 
 /* ---------- setup ---------- */
 function buildShields() {
@@ -619,7 +635,7 @@ function label(a, b) {
   ctx.fillStyle = '#f6e7c4'; ctx.font = '600 15px Figtree, system-ui, sans-serif'; ctx.fillText(a.toUpperCase(), W / 2, 292);
   ctx.fillStyle = '#e9b44c'; ctx.font = '40px "Yatra One", Georgia, serif'; ctx.fillText(b, W / 2, 338);
 }
-function draw() {
+function drawWayang() {
   ctx.save();
   if (shake > 0) ctx.translate(rnd(-4, 4) * shake * 2, rnd(-4, 4) * shake * 2);
   drawBackdrop();
@@ -657,6 +673,86 @@ function draw() {
   ctx.restore();
 }
 
+/* ---------- retro style: the same cast as pixel sprites on a black tube ---------- */
+const PXF = '"Press Start 2P", "Courier New", monospace';
+const C = { kalong: '#3fd6c0', buto: '#f2c14e', leak: '#ff6a55', naga: '#e86bd0', garuda: '#f6e7c4', emas: '#e9b44c', kayon: '#c98a2b' };
+const BM = {
+  kalong: [["X.........X","XX..X.X..XX","XXX.XXX.XXX","XXXXXXXXXXX",".XXX.X.XXX.","..X.XXX.X..",".....X....."],
+           ["....X.X....","....XXX....",".XXXXXXXXX.","XXXX.X.XXXX","XXX.XXX.XXX","XX...X...XX","X.........X"]],
+  buto:   [["X..X.X.X..X","XXXXXXXXXXX",".XXXXXXXXX.","XX..XXX..XX","XX.oXXX.oXX","XXXXXXXXXXX","XXX.....XXX",".XX.X.X.XX.",".XXXXXXXXX.","..XXX.XXX.."],
+           ["X..X.X.X..X","XXXXXXXXXXX",".XXXXXXXXX.","XX..XXX..XX","XXo.XXXo.XX","XXXXXXXXXXX","XXXXXXXXXXX",".X.XX.XX.X.",".XXXXXXXXX.",".XXX...XXX."]],
+  leak:   [["X.X..X..X.X",".X.X.X.X.X.","XXXXXXXXXXX",".XXXXXXXXX.","XX.XXXXX.XX",".XXXXXXXXX.","..XXoooXX..","...XoooX...","....ooo....",".....o....."],
+           [".X.X.X.X.X.","X.X..X..X.X","XXXXXXXXXXX",".XXXXXXXXX.","XX.XXXXX.XX",".XXXXXXXXX.","..XXoooXX..","...XoooX...",".....o.....","..........."]],
+  garuda: ["......X......",".....XXX.....","X....XoX....X","XX..XXXXX..XX","XXXXXXXXXXXXX",".XXXXXXXXXXX.","..XXX.X.XXX..","...X..X..X...","......X......"],
+  naga:   ["..............X.",".X..X..X..X.XXXX","XXXXXXXXXXXXXoXX","XXXXXXXXXXXXXXXX",".XX.XX.XX.XXXXX.","..............o."],
+};
+BM.nagaKiri = BM.naga.map(r => [...r].reverse().join(''));
+function spr(bm, x, y, c1, c2) {
+  const w = bm[0].length, h = bm.length, x0 = Math.round((x - w) / 2) * 2, y0 = Math.round((y - h) / 2) * 2;
+  for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+    const ch = bm[r][c]; if (ch === '.') continue;
+    ctx.fillStyle = ch === 'o' ? c2 : c1; ctx.fillRect(x0 + c * 2, y0 + r * 2, 2, 2);
+  }
+}
+function rlabel(a, b) {
+  ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillRect(0, 266, W, 92);
+  ctx.fillStyle = C.kalong; ctx.fillRect(0, 266, W, 2); ctx.fillRect(0, 356, W, 2);
+  ctx.fillStyle = '#fff'; ctx.font = '9px ' + PXF; ctx.fillText(a.toUpperCase(), W / 2, 296);
+  ctx.fillStyle = C.emas; ctx.font = '20px ' + PXF; ctx.fillText(b.toUpperCase(), W / 2, 338);
+}
+function drawRetro() {
+  const q = v => Math.round(v / 4) * 4;
+  ctx.fillStyle = '#05060d'; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 46; i++) {
+    ctx.fillStyle = (i + Math.floor(time * 2)) % 7 ? '#2c365c' : '#8fa0e0';
+    ctx.fillRect((i * 97) % W, (i * 151) % 560, 2, 2);
+  }
+  ctx.fillStyle = 'rgba(70,84,150,0.2)'; SKY[(level - 1) % 7]();
+  ctx.fillStyle = C.emas; for (let x = 0; x < W; x += 8) ctx.fillRect(x, G, 6, 2);
+  ctx.fillStyle = C.kayon;
+  for (const s of shields) for (let r = 0; r < 13; r++) for (let c = 0; c < 15; c++) if (s.cells[r * 15 + c]) ctx.fillRect(s.x + c * 4, s.y + r * 4, 4, 4);
+  if (naga) spr(naga.d > 0 ? BM.naga : BM.nagaKiri, naga.x, 52 + Math.round(Math.sin(time * 6)) * 2, C.naga, '#fff');
+  for (const e of enemies) {
+    const col = freeze > 0 ? '#5a6aa8' : e.hit > 0 ? '#fff' : e.type === 'buto' && e.hp === 1 && level > 1 ? '#b98a3a' : C[e.type];
+    const f = e.dv ? Math.floor(time * 10) % 2 : flap;
+    spr(BM[e.type][f], e.dv ? e.x : q(e.x), e.dv ? e.y : q(e.y), col, e.type === 'leak' ? '#fff' : '#ff6a55');
+  }
+  ctx.textAlign = 'center';
+  for (const d of drops) {
+    const x = Math.round(d.x / 2) * 2, y = Math.round(d.y / 2) * 2;
+    ctx.fillStyle = C.emas; ctx.fillRect(x - 10, y - 10, 20, 20); ctx.fillStyle = '#05060d'; ctx.fillRect(x - 8, y - 8, 16, 16);
+    ctx.fillStyle = C.emas; ctx.font = '10px ' + PXF;
+    ctx.fillText({ keris: 'K', gong: 'G', payung: 'P', kendi: 'N' }[d.kind], x + 1, y + 6);
+  }
+  for (const s of shots) { ctx.fillStyle = s.pierce ? '#ff6a55' : '#fff'; ctx.fillRect(Math.round(s.x) - 1, Math.round(s.y / 2) * 2 - 8, 2, 12); }
+  for (const b of bolts) {
+    ctx.fillStyle = b.leak ? '#ff6a55' : '#f2c14e';
+    const z = Math.floor(time * 14) % 2 ? 2 : -2, x = Math.round(b.x), y = Math.round(b.y / 2) * 2;
+    ctx.fillRect(x - 1 + z, y - 12, 2, 4); ctx.fillRect(x - 1 - z, y - 8, 2, 4); ctx.fillRect(x - 1 + z, y - 4, 2, 4); ctx.fillRect(x - 1 - z, y, 2, 4);
+  }
+  if (mode !== 'over' && P.dead <= 0 && !(P.inv > 0 && Math.floor(time * 12) % 2)) {
+    spr(BM.garuda, P.x, PY, keris > 0 ? '#ff9a7a' : C.garuda, C.emas);
+    if (P.payung) { ctx.fillStyle = C.kalong; const x = Math.round(P.x / 2) * 2; ctx.fillRect(x - 12, PY - 18, 24, 2); ctx.fillRect(x - 18, PY - 16, 6, 2); ctx.fillRect(x + 12, PY - 16, 6, 2); ctx.fillRect(x - 22, PY - 14, 4, 4); ctx.fillRect(x + 18, PY - 14, 4, 4); }
+  }
+  for (const p of parts) { ctx.fillStyle = p.col === INK ? '#fff' : p.col; ctx.fillRect(Math.round(p.x / 2) * 2, Math.round(p.y / 2) * 2, 2, 2); }
+  ctx.font = '8px ' + PXF; ctx.fillStyle = '#fff';
+  for (const t of texts) ctx.fillText(t.s.toUpperCase(), clamp(t.x, 70, W - 70), t.y);
+  if (mode === 'play') {
+    ctx.fillStyle = C.kalong; ctx.textAlign = 'left';
+    ctx.fillText('BABAK ' + level + ' ' + PULAU[(level - 1) % 7].nama.toUpperCase(), 10, 20);
+    ctx.textAlign = 'right'; ctx.fillStyle = C.emas;
+    ctx.fillText([keris > 0 ? 'KERIS ' + Math.ceil(keris) : '', freeze > 0 ? 'GONG ' + Math.ceil(freeze) : '', P.payung ? 'PAYUNG' : ''].filter(Boolean).join(' '), W - 10, 20);
+    if (inter) rlabel(inter.b, inter.a); else if (banner) rlabel(banner.a, banner.b);
+  }
+  if (mode === 'pause') rlabel('P untuk lanjut', 'Jeda');
+}
+function draw() { if (retro) drawRetro(); else drawWayang(); }
+function setGaya(on) {
+  retro = on; document.body.classList.toggle('retro', on);
+  $('btn-gaya').textContent = 'Gaya: ' + (on ? 'retro' : 'wayang');
+  try { localStorage.setItem('penjaga-gaya', on ? 'retro' : 'wayang'); } catch (e) {}
+}
+
 /* ---------- loop, sizing, input ---------- */
 let last = 0;
 function tick(ts) {
@@ -687,6 +783,7 @@ addEventListener('keydown', e => {
   if (e.repeat) return;
   if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') togglePause();
   if (e.key === 'm' || e.key === 'M') $('btn-suara').click();
+  if (e.key === 'g' || e.key === 'G') setGaya(!retro);
   if (e.key === 'Enter' && (mode === 'title' || mode === 'over')) { e.preventDefault(); begin(); }
 });
 addEventListener('keyup', e => { if (e.key in MAP) keys[MAP[e.key]] = false; });
@@ -711,6 +808,8 @@ $('btn-suara').addEventListener('click', e => {
   muted = !muted; e.currentTarget.textContent = 'Suara: ' + (muted ? 'mati' : 'nyala'); e.currentTarget.blur();
 });
 
+$('btn-gaya').addEventListener('click', e => { setGaya(!retro); e.currentTarget.blur(); });
+setGaya(retro);
 titleScene(); hud(); fit();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
 requestAnimationFrame(tick);

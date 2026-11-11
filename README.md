@@ -10,6 +10,7 @@ Buka `index.html` di browser. Tidak perlu instalasi.
 - Gerak: panah kiri/kanan atau A/D
 - Memanah: Spasi
 - Jeda: P, suara: M
+- Ganti gaya: G atau tombol Gaya (wayang kulit, atau retro piksel dengan suara chiptune)
 - Layar sentuh: geser jari di kelir, atau pakai tombol di bawah
 
 ## Pusaka
