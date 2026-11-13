@@ -10,7 +10,7 @@ Catatan tentang cara menjelaskan keinginan ke AI supaya hasilnya bisa dipakai, d
 
 **Bicara, bukan mengetik:** [[yap-session-bicara-bebas-tentang-masalahnya]], [[ceritakan-kondisi-sekarang-dan-yang-diinginkan]], [[memberi-perintah-dengan-suara]], [[mode-suara-untuk-prompt-lebih-deskriptif]]
 
-**Isi brief:** [[brief-boss-latar-hasil-gaya-rincian]], [[contoh-tulisan-sendiri-untuk-meniru-gaya]], [[prompt-harus-sangat-spesifik]], [[instruksi-harus-konkret]], [[sebutkan-apa-yang-tidak-boleh-dilakukan]]
+**Isi brief:** [[brief-boss-latar-hasil-gaya-rincian]], [[contoh-tulisan-sendiri-untuk-meniru-gaya]], [[prompt-harus-sangat-spesifik]], [[instruksi-harus-konkret]], [[sebutkan-apa-yang-tidak-boleh-dilakukan]], [[minta-ai-mewawancarai-anda-dulu]]
 
 **Setelah hasil keluar:** [[draf-pertama-beri-masukan-jangan-mulai-ulang]], [[suruh-ai-membuktikan-hasil-kerjanya]]
 
