@@ -1,0 +1,492 @@
+<title>Runtuh Candi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Figtree:wght@400;600;800&display=swap">
+<style>
+/* Layout: one screen. Score rail on top, the black arcade tube in the middle; the relief being rebuilt sits at the foot of the tube. */
+:root {
+  color-scheme: dark;
+  --malam: #0a0b14;       /* page ground, night behind the tube */
+  --malam-2: #161929;     /* raised surfaces */
+  --garis: #2c3152;       /* hairlines */
+  --toska: #3fd6c0;       /* the paddle and primary accent */
+  --emas: #e9b44c;        /* gilded stones, rewards */
+  --andesit: #9a968a;     /* temple stone */
+  --gading: #f1ead8;      /* text */
+  --gading-redup: #a9a595;
+  --font-piksel: "Press Start 2P", "Courier New", monospace;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+body {
+  background: var(--malam);
+  color: var(--gading);
+  font-family: var(--font-body);
+  font-size: 15px;
+  display: flex; flex-direction: column; gap: 10px;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.rail { display: flex; align-items: center; gap: 8px 18px; flex-wrap: wrap; width: 100%; max-width: 620px; margin-inline: auto; }
+.rail h1 { font-family: var(--font-piksel); font-weight: 400; font-size: 13px; margin: 0 auto 0 0; color: var(--toska); }
+.stat { display: flex; flex-direction: column; line-height: 1.15; }
+.stat span { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gading-redup); }
+.stat b { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.btn-kecil {
+  font: 600 13px var(--font-body); color: var(--gading);
+  background: var(--malam-2); border: 1px solid var(--garis); border-radius: 999px;
+  padding: 7px 12px; cursor: pointer;
+}
+.btn-kecil:hover { border-color: var(--toska); }
+button:focus-visible { outline: 2px solid var(--emas); outline-offset: 2px; }
+
+.stage { flex: 1; min-height: 0; display: grid; place-items: center; }
+.frame {
+  position: relative; width: 300px; height: 400px;
+  border: 3px solid var(--garis);
+  box-shadow: 0 0 0 6px #000, 0 0 50px rgba(63, 214, 192, .16);
+  background: #000;
+}
+.frame::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.24) 2px 3px);
+}
+canvas { display: block; width: 100%; height: 100%; touch-action: none; image-rendering: pixelated; cursor: none; }
+
+.layar {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px; text-align: center;
+  padding: 18px; background: rgba(0, 0, 0, .86); overflow-y: auto;
+}
+.layar h2 { font-family: var(--font-piksel); font-weight: 400; color: var(--toska); font-size: clamp(17px, 5.6vw, 26px); line-height: 1.5; margin: 0; text-wrap: balance; }
+.layar p { margin: 0; max-width: 34ch; line-height: 1.45; }
+.layar .kecil { font-size: 13px; color: var(--gading-redup); }
+.aturan { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; text-align: left; font-size: 13px; margin: 0; max-width: 36ch; }
+.aturan dt { color: var(--emas); font-weight: 800; }
+.aturan dd { margin: 0; }
+.btn-utama {
+  font: 400 12px var(--font-piksel); color: #10131f; background: var(--emas); border: 0;
+  padding: 14px 30px; cursor: pointer; box-shadow: 0 4px 0 #a8823a;
+}
+.btn-utama:active { transform: translateY(3px); box-shadow: 0 1px 0 #a8823a; }
+</style>
+
+<header class="rail">
+  <h1>Runtuh Candi</h1>
+  <div class="stat"><span>Skor</span><b id="skor">0</b></div>
+  <div class="stat"><span>Rekor</span><b id="rekor">0</b></div>
+  <div class="stat"><span>Nyawa</span><b id="nyawa">4</b></div>
+  <button class="btn-kecil" id="btn-jeda" type="button">Jeda</button>
+  <button class="btn-kecil" id="btn-suara" type="button">Suara: nyala</button>
+</header>
+
+<main class="stage" id="stage">
+  <div class="frame" id="frame">
+    <canvas id="tabung" aria-label="Layar permainan Runtuh Candi"></canvas>
+    <div class="layar" id="layar">
+      <h2 id="layar-judul">Runtuh Candi</h2>
+      <p id="layar-teks">Bongkar tumpukan batu dengan bola, lalu tangkap batu yang jatuh untuk menyusun kembali relief candi di bawah.</p>
+      <dl class="aturan" id="layar-aturan">
+        <dt>Bola</dt><dd>Jangan sampai lolos. Tiap bola yang jatuh mengurangi nyawa.</dd>
+        <dt>Batu</dt><dd>Tangkap dengan tandu. Batu yang lolos hanya pecah, tidak mengurangi nyawa.</dd>
+        <dt>Emas</dt><dd>Batu emas menjatuhkan bantuan: L tandu lebar, P bola pelan, N nyawa.</dd>
+      </dl>
+      <button class="btn-utama" id="btn-mulai" type="button">Mulai</button>
+      <p class="kecil" id="layar-kendali">Gerakkan tandu dengan tetikus, jari, atau panah kiri/kanan. Klik, ketuk, atau Spasi untuk melepas bola. P untuk jeda.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+'use strict';
+const W = 480, H = 640, TOP = 8, PADY = 540, FLOOR = 566, RY = 568, R = 5;
+const BW = 44, BH = 18, TW = 40, TH = 36, NT = 24;
+const PXF = '"Press Start 2P", "Courier New", monospace';
+const TOSKA = '#3fd6c0', EMAS = '#e9b44c';
+const BATU = ['#a39e90', '#93948a', '#a89c86', '#8c9085', '#9d9682', '#8f897b', '#a19b8b'];
+const cv = document.getElementById('tabung'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+const frame = $('frame'), stage = $('stage'), layar = $('layar');
+const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- reliefs: drawn small, then blown up into chunky carved stone ---------- */
+const E = (c, x, y, rx, ry) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 6.2832); c.fill(); };
+const PG = (c, p) => { c.beginPath(); c.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); c.closePath(); c.fill(); };
+const LN = (c, p, w) => { c.lineWidth = w || 1; c.beginPath(); c.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); c.stroke(); };
+function boat(c, x, s) {
+  c.beginPath(); c.moveTo(x - 32 * s, 13); c.quadraticCurveTo(x, 13 + 9 * s, x + 32 * s, 13);
+  c.lineTo(x + 27 * s, 13 + 5 * s); c.quadraticCurveTo(x, 14 + 10 * s, x - 27 * s, 13 + 5 * s); c.closePath(); c.fill();
+  c.fillRect(x - 34 * s, 13 - 5 * s, 2, 5 * s + 1); c.fillRect(x + 32 * s, 13 - 5 * s, 2, 5 * s + 1);
+  c.fillRect(x - 11 * s, 13 - 10 * s, 1.4, 12 * s); c.fillRect(x + 12 * s, 13 - 9 * s, 1.4, 11 * s);
+  PG(c, [x - 10 * s, 13 - 10 * s, x + 6 * s, 13 - 8 * s, x + 4 * s, 13 - 2 * s, x - 10 * s, 13 - 3 * s]);
+  PG(c, [x + 13 * s, 13 - 9 * s, x + 25 * s, 13 - 7 * s, x + 24 * s, 13 - 2 * s, x + 13 * s, 13 - 3 * s]);
+}
+function goose(c, x) {
+  E(c, x, 9, 8, 3.2); PG(c, [x - 5, 8, x + 1, 2, x + 5, 8]); LN(c, [x + 6, 8, x + 12, 5], 2); E(c, x + 13, 5, 2.4, 1.8);
+  PG(c, [x - 7, 8, x - 13, 6, x - 12, 11]); LN(c, [x - 1, 11, x - 1, 14], 1.4);
+}
+function bird(c, x, d) { E(c, x, 17, 4, 2.6); E(c, x + d * 4, 13.5, 2, 2); PG(c, [x - d * 3, 16, x - d * 9, 13, x - d * 8, 19]); PG(c, [x + d * 5.5, 13, x + d * 8, 14, x + d * 5.5, 15]); c.fillRect(x - 1, 19, 1.4, 3); }
+const MOTIF = [
+  c => { boat(c, 80, 1); boat(c, 22, 0.42); boat(c, 140, 0.42);            // perahu bercadik
+    c.fillRect(54, 20, 52, 1.4); for (let x = 0; x < 160; x += 9) { c.beginPath(); c.arc(x + 4, 23.5, 4, Math.PI, 0); c.lineWidth = 1.3; c.stroke(); } },
+  c => { goose(c, 48); goose(c, 108); c.fillRect(44, 14, 68, 1.4);          // kura-kura dan angsa
+    E(c, 79, 18.5, 8, 3.6); E(c, 89.5, 17.5, 2.6, 1.8); c.fillRect(73, 20, 3, 3); c.fillRect(83, 20, 3, 3); c.fillRect(78, 14, 1.6, 2);
+    E(c, 14, 8, 9, 3); E(c, 21, 5.5, 5, 3); E(c, 146, 8, 9, 3); E(c, 139, 5.5, 5, 3); E(c, 20, 20, 5, 2); E(c, 142, 20, 5, 2); },
+  c => { for (const x of [27, 80, 133]) { PG(c, [x - 5, 22, x + 5, 22, x + 3, 17, x - 3, 17]); c.fillRect(x - 1, 11, 2, 6); // kalpataru
+      E(c, x, 6.5, 7, 4.6); E(c, x - 6, 10, 4.5, 3); E(c, x + 6, 10, 4.5, 3); bird(c, x - 16, 1); bird(c, x + 16, -1); } },
+  c => { [16, 48, 80, 112, 144].forEach((x, i) => { c.lineWidth = 1.8; c.beginPath(); c.arc(x, 12, 9.5, 0, 6.2832); c.stroke(); // medalion satwa
+      if (i % 2) { for (let k = 0; k < 6; k++) E(c, x + Math.cos(k * 1.047) * 4.2, 12 + Math.sin(k * 1.047) * 4.2, 2.1, 2.1); }
+      else { E(c, x - 1, 13, 5, 2.6); c.fillRect(x - 5, 15, 1.5, 4); c.fillRect(x + 2, 15, 1.5, 4); LN(c, [x + 3, 12, x + 5, 8], 2); E(c, x + 5.5, 7.5, 2.2, 1.6); LN(c, [x + 5, 6, x + 4, 3.5], 1); LN(c, [x + 6, 6, x + 7.5, 3.5], 1); }
+      if (i < 4) PG(c, [x + 16, 9.5, x + 18.5, 12, x + 16, 14.5, x + 13.5, 12]); }); },
+  c => { for (const x of [24, 78, 132]) { E(c, x, 12, 13, 6.5); E(c, x + 13, 9.5, 6.5, 5.5);                 // gajah
+      c.fillRect(x - 10, 15, 4.5, 7); c.fillRect(x - 3, 15, 4.5, 7); c.fillRect(x + 5, 15, 4.5, 7);
+      c.lineWidth = 3; c.beginPath(); c.moveTo(x + 18, 10); c.quadraticCurveTo(x + 23, 17, x + 19, 21); c.stroke(); LN(c, [x - 12, 9, x - 16, 15], 1.4);
+      c.fillStyle = '#000'; E(c, x + 10, 10, 2.2, 3.4); c.fillRect(x + 15, 7.5, 1.2, 1.2); c.fillStyle = '#fff'; } },
+];
+const CANDI = [
+  { nama: 'Borobudur', relief: 'Perahu Bercadik', wall: ['....EE....', '...1111...', '..111111..', '.11111111.', '1111111111'] },
+  { nama: 'Mendut', relief: 'Kura-kura dan Angsa', wall: ['...1EE1...', '..111111..', '..122221..', '.11111111.', '.12111121.', '1111111111'] },
+  { nama: 'Prambanan', relief: 'Kalpataru', wall: ['....22....', '.1..22..1.', '.1.1EE1.1.', '111.22.111', '1111111111', '12E1111E21', '1111111111'] },
+  { nama: 'Penataran', relief: 'Medalion Satwa', wall: ['1........1', '12......21', '112....211', '1E21..12E1', '1122..2211', '1111221111', '1212112121'] },
+  { nama: 'Sukuh', relief: 'Gajah', wall: ['...2222...', '..21EE12..', '..211112..', '.21111112.', '.2E1111E2.', '2111111112', '2121221212'] },
+];
+const reliefCache = [];
+function makeRelief(i) {
+  if (reliefCache[i]) return reliefCache[i];
+  const lo = document.createElement('canvas'); lo.width = 160; lo.height = 24;
+  const c = lo.getContext('2d', { willReadFrequently: true });
+  c.fillStyle = '#000'; c.fillRect(0, 0, 160, 24); c.fillStyle = '#fff'; c.strokeStyle = '#fff';
+  MOTIF[i](c); c.fillStyle = '#fff'; c.fillRect(0, 0, 160, 1);
+  const d = c.getImageData(0, 0, 160, 24).data;
+  const on = (x, y) => x >= 0 && y >= 0 && x < 160 && y < 24 && d[(y * 160 + x) * 4] > 110;
+  const hi = document.createElement('canvas'); hi.width = 480; hi.height = 72; const h = hi.getContext('2d');
+  for (let y = 0; y < 24; y++) for (let x = 0; x < 160; x++) {
+    h.fillStyle = on(x, y) ? (on(x, y - 1) ? '#b9b09a' : '#e0d8c0') : on(x - 1, y - 1) ? '#2a2924' : (x * 7 + y * 13) % 11 === 0 ? '#58554b' : '#4b4940';
+    h.fillRect(x * 3, y * 3, 3, 3);
+  }
+  return (reliefCache[i] = hi);
+}
+
+/* ---------- state ---------- */
+let mode = 'title', time = 0, level = 1, score = 0, lives = 4, hi = 0;
+let bricks = [], stones = [], items = [], flyers = [], parts = [], texts = [], trail = [];
+let tiles = new Uint8Array(NT), flash = new Float32Array(NT), relief = null;
+let ball, pad, combo = 0, hits = 0, wide = 0, slow = 0, banner = null, done = null, shake = 0;
+const keys = { l: false, r: false };
+try { hi = +localStorage.getItem('runtuh-rekor') || 0; } catch (e) {}
+
+/* ---------- audio: square-wave chips ---------- */
+let ac = null, muted = false, grit = null;
+function wake() {
+  if (!ac) {
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      grit = ac.createBuffer(1, ac.sampleRate / 2, ac.sampleRate);
+      const ch = grit.getChannelData(0); for (let k = 0; k < ch.length; k++) ch[k] = Math.random() * 2 - 1;
+    } catch (e) { ac = null; }
+  }
+  if (ac && ac.state === 'suspended') ac.resume();
+}
+function blip(f, d, v, f2, type) {
+  if (!ac || muted) return;
+  const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + 0.02);
+}
+function crunch(d, v) {
+  if (!ac || muted) return;
+  const t = ac.currentTime, n = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter();
+  n.buffer = grit; f.type = 'lowpass'; f.frequency.value = 1400;
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  n.connect(f); f.connect(g); g.connect(ac.destination); n.start(t); n.stop(t + d + 0.02);
+}
+const tune = (notes, gap, d) => notes.forEach((f, k) => setTimeout(() => blip(f, d || 0.12, 0.07), k * gap));
+
+/* ---------- setup ---------- */
+const cur = () => CANDI[(level - 1) % 5];
+const putaran = () => Math.floor((level - 1) / 5);
+function buildWall() {
+  bricks = [];
+  cur().wall.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch === '.') return;
+    bricks.push({ x: 11 + c * 46, y: 52 + r * 20, r, kind: ch, hp: ch === '2' ? 2 : 1, hit: 0 });
+  }));
+}
+function resetBall() { ball = { x: pad.x, y: PADY - R, vx: 0, vy: 0, stuck: true }; trail = []; hits = 0; }
+function setupLevel() {
+  relief = makeRelief((level - 1) % 5);
+  tiles = new Uint8Array(NT); flash = new Float32Array(NT);
+  stones = []; items = []; flyers = []; combo = 0; wide = 0; slow = 0; done = null;
+  buildWall(); resetBall();
+  banner = { t: 2.4, a: (putaran() ? 'Putaran ' + (putaran() + 1) + ' ' : '') + 'Candi ' + level, b: cur().nama };
+}
+function newGame() {
+  score = 0; lives = 4; level = 1; parts = []; texts = [];
+  pad = { x: W / 2, w: 92 };
+  setupLevel(); mode = 'play'; layar.hidden = true; hud();
+  tune([330, 440, 660], 90);
+}
+function titleScene() { level = 1; pad = { x: W / 2, w: 92 }; setupLevel(); banner = null; tiles.fill(2); }
+function hud() { $('skor').textContent = score; $('rekor').textContent = Math.max(hi, score); $('nyawa').textContent = Math.max(lives, 0); }
+function say(x, y, s) { texts.push({ x: clamp(x, 60, W - 60), y, t: 1.1, s }); }
+function burst(x, y, n, col) {
+  if (calm) n = Math.ceil(n / 3);
+  for (let i = 0; i < n; i++) { const a = rnd(0, 6.28), v = rnd(30, 150); parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, t: rnd(0.25, 0.6), col }); }
+}
+const filled = () => { let n = 0; for (let i = 0; i < NT; i++) if (tiles[i]) n++; return n; };
+const placed = () => { let n = 0; for (let i = 0; i < NT; i++) if (tiles[i] === 2) n++; return n; };
+
+/* ---------- update ---------- */
+function speed() {
+  return (250 + 12 * Math.min(level - 1, 4) + 22 * Math.min(putaran(), 3)) * (1 + Math.min(0.3, Math.floor(hits / 12) * 0.03)) * (slow > 0 ? 0.7 : 1);
+}
+function launch() {
+  if (mode !== 'play' || !ball.stuck || done) return;
+  const a = rnd(-0.5, 0.5), sp = speed();
+  ball.stuck = false; ball.vx = Math.sin(a) * sp; ball.vy = -Math.cos(a) * sp; blip(520, 0.08, 0.06, 780);
+}
+function hitBrick(b, i) {
+  hits++;
+  if (--b.hp > 0) { b.hit = 0.12; blip(180, 0.06, 0.06); score += 5; hud(); return; }
+  bricks.splice(i, 1);
+  const cx = b.x + BW / 2, cy = b.y + BH / 2, col = b.kind === 'E' ? EMAS : b.kind === '2' ? '#69707d' : BATU[b.r % 7];
+  score += b.kind === '2' ? 20 : 10; hud();
+  blip(300 + (7 - b.r) * 45, 0.07, 0.06); crunch(0.09, 0.07); burst(cx, cy, 6, col);
+  stones.push({ x: cx, y: cy, col });
+  if (b.kind === 'E') {
+    const r = Math.random(), kind = lives < 4 && r < 0.25 ? 'N' : r < 0.65 ? 'L' : 'P';
+    items.push({ x: cx, y: cy - 16, kind });
+  }
+}
+function stepBall(dt) {
+  const sp = speed(); let m = Math.hypot(ball.vx, ball.vy) || 1;
+  ball.vx *= sp / m; ball.vy *= sp / m;
+  if (Math.abs(ball.vy) < sp * 0.3) { ball.vy = (ball.vy < 0 ? -1 : 1) * sp * 0.3; ball.vx = Math.sign(ball.vx || 1) * Math.sqrt(sp * sp - ball.vy * ball.vy); }
+  const n = Math.ceil(sp * dt / 4), h = dt / n;
+  for (let s = 0; s < n; s++) {
+    ball.x += ball.vx * h; ball.y += ball.vy * h;
+    if (ball.x < 6 + R) { ball.x = 6 + R; ball.vx = Math.abs(ball.vx); blip(240, 0.03, 0.03); }
+    if (ball.x > W - 6 - R) { ball.x = W - 6 - R; ball.vx = -Math.abs(ball.vx); blip(240, 0.03, 0.03); }
+    if (ball.y < TOP + R) { ball.y = TOP + R; ball.vy = Math.abs(ball.vy); blip(240, 0.03, 0.03); }
+    if (ball.vy > 0 && ball.y + R >= PADY && ball.y + R <= PADY + 14 && Math.abs(ball.x - pad.x) <= pad.w / 2 + R) {
+      const a = clamp((ball.x - pad.x) / (pad.w / 2), -1, 1) * 1.0;
+      ball.vx = Math.sin(a) * sp; ball.vy = -Math.cos(a) * sp; ball.y = PADY - R; blip(200, 0.06, 0.07, 300);
+    }
+    for (let i = bricks.length - 1; i >= 0; i--) {
+      const b = bricks[i], dx = ball.x - (b.x + BW / 2), dy = ball.y - (b.y + BH / 2);
+      const ox = BW / 2 + R - Math.abs(dx), oy = BH / 2 + R - Math.abs(dy);
+      if (ox <= 0 || oy <= 0) continue;
+      if (ox < oy) { ball.vx = Math.sign(dx || 1) * Math.abs(ball.vx); ball.x += Math.sign(dx || 1) * ox; }
+      else { ball.vy = Math.sign(dy || 1) * Math.abs(ball.vy); ball.y += Math.sign(dy || 1) * oy; }
+      hitBrick(b, i); break;
+    }
+    if (ball.y > FLOOR + R) { loseBall(); return; }
+  }
+  trail.push(ball.x, ball.y); if (trail.length > 12) trail.splice(0, 2);
+}
+function loseBall() {
+  lives--; hud(); combo = 0; stones = []; items = []; wide = 0; slow = 0;
+  burst(ball.x, FLOOR, 16, '#fff'); blip(300, 0.5, 0.1, 50); if (!calm) shake = 0.35;
+  if (lives <= 0) { gameOver(); return; }
+  resetBall(); say(W / 2, PADY - 40, 'Bola lolos');
+}
+function gameOver() {
+  mode = 'over';
+  if (score > hi) { hi = score; try { localStorage.setItem('runtuh-rekor', String(hi)); } catch (e) {} }
+  hud();
+  $('layar-judul').textContent = 'Permainan Usai';
+  $('layar-teks').textContent = 'Skor ' + score + ', sampai Candi ' + level + ' (' + cur().nama + ') dengan ' + placed() + ' dari ' + NT + ' keping relief. Rekor ' + hi + '.';
+  $('layar-aturan').hidden = true; $('layar-kendali').hidden = true;
+  $('btn-mulai').textContent = 'Main lagi'; layar.hidden = false; $('btn-mulai').focus();
+}
+function catchStone(s) {
+  combo++; const mult = Math.min(combo, 5); score += 50 * mult; hud();
+  const free = []; for (let i = 0; i < NT; i++) if (!tiles[i]) free.push(i);
+  if (free.length) { const i = free[Math.floor(Math.random() * free.length)]; tiles[i] = 1; flyers.push({ x: s.x, y: PADY - 8, i, t: 0, col: s.col }); }
+  say(s.x, PADY - 22, '+' + 50 * mult + (mult > 1 ? ' x' + mult : ''));
+  blip(520 + mult * 70, 0.06, 0.07); setTimeout(() => blip(780 + mult * 70, 0.08, 0.07), 55);
+}
+function update(dt) {
+  time += dt;
+  if (mode !== 'play') { if (mode === 'over') stepFx(dt); return; }
+  if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
+  if (shake > 0) shake -= dt;
+  if (wide > 0) wide -= dt; if (slow > 0) slow -= dt;
+  pad.w += clamp((wide > 0 ? 136 : 92) - pad.w, -240 * dt, 240 * dt);
+  const mv = (keys.l ? -1 : 0) + (keys.r ? 1 : 0);
+  pad.x = clamp(pad.x + mv * 430 * dt, 6 + pad.w / 2, W - 6 - pad.w / 2);
+
+  if (done) {
+    done.t -= dt; stepFx(dt);
+    if (done.t <= 0) { level++; setupLevel(); }
+    return;
+  }
+  if (ball.stuck) { ball.x = pad.x; ball.y = PADY - R; } else stepBall(dt);
+  if (mode !== 'play') return;
+
+  for (let i = stones.length - 1; i >= 0; i--) {
+    const s = stones[i]; s.y += (108 + Math.min(level, 6) * 4) * dt;
+    if (s.y + 7 >= PADY && s.y - 7 <= PADY + 12 && Math.abs(s.x - pad.x) <= pad.w / 2 + 12) { stones.splice(i, 1); catchStone(s); continue; }
+    if (s.y > FLOOR - 4) { stones.splice(i, 1); burst(s.x, FLOOR - 4, 7, s.col); crunch(0.12, 0.06); if (combo > 1) say(s.x, FLOOR - 16, 'Beruntun putus'); combo = 0; }
+  }
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i]; it.y += 92 * dt;
+    if (it.y + 9 >= PADY && it.y - 9 <= PADY + 12 && Math.abs(it.x - pad.x) <= pad.w / 2 + 10) {
+      items.splice(i, 1);
+      if (it.kind === 'L') { wide = 14; say(it.x, PADY - 24, 'Tandu lebar'); }
+      else if (it.kind === 'P') { slow = 9; say(it.x, PADY - 24, 'Bola pelan'); }
+      else { lives = Math.min(lives + 1, 5); hud(); say(it.x, PADY - 24, 'Nyawa +1'); }
+      tune([440, 554, 660, 880], 55, 0.08); continue;
+    }
+    if (it.y > FLOOR) items.splice(i, 1);
+  }
+  for (let i = flyers.length - 1; i >= 0; i--) {
+    const f = flyers[i]; f.t += dt / 0.38;
+    if (f.t >= 1) { flyers.splice(i, 1); tiles[f.i] = 2; flash[f.i] = 0.5; blip(140, 0.06, 0.06); }
+  }
+  for (let i = 0; i < NT; i++) if (flash[i] > 0) flash[i] -= dt;
+
+  if (placed() === NT) {
+    const bonus = 500 + lives * 100; score += bonus; hud(); stones = []; items = []; ball.stuck = true; trail = [];
+    done = { t: 3, a: 'Relief pulih  +' + bonus, b: cur().relief };
+    tune([392, 494, 587, 784, 587, 784], 110, 0.16);
+  } else if (!bricks.length) { buildWall(); say(W / 2, 140, 'Batu baru diturunkan'); blip(160, 0.2, 0.06, 320); }
+  stepFx(dt);
+}
+function stepFx(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; if (p.t <= 0) parts.splice(i, 1); }
+  for (let i = texts.length - 1; i >= 0; i--) { const t = texts[i]; t.t -= dt; t.y -= 24 * dt; if (t.t <= 0) texts.splice(i, 1); }
+  for (const b of bricks) if (b.hit > 0) b.hit -= dt;
+}
+
+/* ---------- drawing ---------- */
+function block(x, y, w, h, col, lite, dark) {
+  ctx.fillStyle = col; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = lite; ctx.fillRect(x, y, w, 2); ctx.fillRect(x, y, 2, h);
+  ctx.fillStyle = dark; ctx.fillRect(x, y + h - 2, w, 2); ctx.fillRect(x + w - 2, y, 2, h);
+}
+function label(a, b) {
+  ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillRect(0, 266, W, 92);
+  ctx.fillStyle = TOSKA; ctx.fillRect(0, 266, W, 2); ctx.fillRect(0, 356, W, 2);
+  ctx.fillStyle = '#fff'; ctx.font = '9px ' + PXF; ctx.fillText(a.toUpperCase(), W / 2, 296);
+  ctx.fillStyle = EMAS; ctx.font = (b.length > 16 ? 13 : b.length > 11 ? 16 : 20) + 'px ' + PXF; ctx.fillText(b.toUpperCase(), W / 2, 336);
+}
+function draw() {
+  ctx.save();
+  if (shake > 0) ctx.translate(Math.round(rnd(-3, 3)), Math.round(rnd(-3, 3)));
+  ctx.fillStyle = '#05060d'; ctx.fillRect(-4, -4, W + 8, H + 8);
+  for (let i = 0; i < 40; i++) { ctx.fillStyle = (i + Math.floor(time * 2)) % 9 ? '#232844' : '#7f8fd0'; ctx.fillRect((i * 97) % W, 230 + (i * 151) % 290, 2, 2); }
+  ctx.fillStyle = '#2c3152'; ctx.fillRect(0, 0, W, TOP - 2); ctx.fillRect(0, 0, 6, FLOOR); ctx.fillRect(W - 6, 0, 6, FLOOR);
+
+  for (const b of bricks) {
+    if (b.hit > 0) block(b.x, b.y, BW, BH, '#fff', '#fff', '#ccc');
+    else if (b.kind === 'E') { block(b.x, b.y, BW, BH, EMAS, '#ffe2a0', '#a8823a'); ctx.fillStyle = '#a8823a'; ctx.fillRect(b.x + 20, b.y + 6, 4, 6); ctx.fillRect(b.x + 17, b.y + 8, 10, 2); }
+    else if (b.kind === '2') { block(b.x, b.y, BW, BH, '#69707d', '#8d95a3', '#3f444e'); ctx.fillStyle = '#3f444e'; if (b.hp > 1) { ctx.fillRect(b.x + 8, b.y + 8, 28, 2); } else { ctx.fillRect(b.x + 12, b.y + 4, 2, 6); ctx.fillRect(b.x + 14, b.y + 8, 8, 2); ctx.fillRect(b.x + 22, b.y + 8, 2, 6); ctx.fillRect(b.x + 30, b.y + 4, 2, 5); } }
+    else { block(b.x, b.y, BW, BH, BATU[b.r % 7], '#c9c4b4', '#5f5c54'); ctx.fillStyle = '#5f5c54'; ctx.fillRect(b.x + ((b.r * 5 + b.x) % 3) * 10 + 8, b.y + 6, 4, 2); ctx.fillRect(b.x + 28, b.y + 11, 6, 2); }
+  }
+  for (const s of stones) { const y = Math.round(s.y / 2) * 2; block(Math.round(s.x) - 13, y - 7, 26, 14, s.col, '#e8e2d0', '#4e4b44'); }
+  ctx.textAlign = 'center'; ctx.font = '10px ' + PXF;
+  for (const it of items) {
+    const x = Math.round(it.x), y = Math.round(it.y / 2) * 2;
+    ctx.fillStyle = EMAS; ctx.fillRect(x - 10, y - 10, 20, 20); ctx.fillStyle = '#05060d'; ctx.fillRect(x - 8, y - 8, 16, 16);
+    ctx.fillStyle = EMAS; ctx.fillText(it.kind, x + 1, y + 6);
+  }
+
+  // floor line and relief panel
+  ctx.fillStyle = EMAS; for (let x = 0; x < W; x += 8) ctx.fillRect(x, FLOOR - 1, 6, 2);
+  for (let i = 0; i < NT; i++) {
+    const x = (i % 12) * TW, y = RY + Math.floor(i / 12) * TH;
+    if (tiles[i] === 2) {
+      ctx.drawImage(relief, x, y - RY, TW, TH, x, y, TW, TH);
+      if (flash[i] > 0) { ctx.globalAlpha = flash[i] * 1.6; ctx.fillStyle = '#fff'; ctx.fillRect(x, y, TW, TH); ctx.globalAlpha = 1; }
+    } else {
+      ctx.fillStyle = '#0d0f1a'; ctx.fillRect(x, y, TW, TH);
+      ctx.globalAlpha = 0.13; ctx.drawImage(relief, x, y - RY, TW, TH, x, y, TW, TH); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#2c3152'; ctx.fillRect(x, y, TW, 1); ctx.fillRect(x, y, 1, TH);
+    }
+  }
+  if (done && Math.floor(time * 6) % 2) { ctx.globalAlpha = 0.16; ctx.fillStyle = '#fff'; ctx.fillRect(0, RY, W, 72); ctx.globalAlpha = 1; }
+  for (const f of flyers) {
+    const tx = (f.i % 12) * TW + TW / 2, ty = RY + Math.floor(f.i / 12) * TH + TH / 2, k = f.t * f.t * (3 - 2 * f.t);
+    block(Math.round(f.x + (tx - f.x) * k) - 13, Math.round(f.y + (ty - f.y) * k - Math.sin(f.t * Math.PI) * 26) - 7, 26, 14, f.col, '#e8e2d0', '#4e4b44');
+  }
+
+  // paddle (the tandu) and ball
+  const px = Math.round(pad.x - pad.w / 2), pw = Math.round(pad.w);
+  block(px, PADY, pw, 10, wide > 0 ? '#7ff0dd' : TOSKA, '#b9fff3', '#1f8f80');
+  ctx.fillStyle = EMAS; ctx.fillRect(px - 4, PADY + 2, 6, 6); ctx.fillRect(px + pw - 2, PADY + 2, 6, 6);
+  if (mode !== 'over') {
+    for (let i = 0; i < trail.length; i += 2) { ctx.globalAlpha = (i + 2) / trail.length * 0.3; ctx.fillStyle = slow > 0 ? '#9ad0ff' : '#fff'; ctx.fillRect(Math.round(trail[i]) - 3, Math.round(trail[i + 1]) - 3, 6, 6); }
+    ctx.globalAlpha = 1; ctx.fillStyle = slow > 0 ? '#9ad0ff' : '#fff';
+    const bx = Math.round(ball.x), by = Math.round(ball.y);
+    ctx.fillRect(bx - 3, by - 5, 6, 10); ctx.fillRect(bx - 5, by - 3, 10, 6);
+  }
+  for (const p of parts) { ctx.fillStyle = p.col; ctx.fillRect(Math.round(p.x / 2) * 2, Math.round(p.y / 2) * 2, 2, 2); }
+  ctx.font = '8px ' + PXF; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  for (const t of texts) ctx.fillText(t.s.toUpperCase(), t.x, Math.round(t.y));
+
+  if (mode === 'play' || mode === 'pause') {
+    ctx.textAlign = 'left'; ctx.fillStyle = TOSKA; ctx.fillText('CANDI ' + level + ' ' + cur().nama.toUpperCase(), 14, 32);
+    ctx.textAlign = 'right'; ctx.fillStyle = EMAS; ctx.fillText('RELIEF ' + placed() + '/' + NT, W - 14, 32);
+    const fx = [wide > 0 ? 'LEBAR ' + Math.ceil(wide) : '', slow > 0 ? 'PELAN ' + Math.ceil(slow) : '', combo > 1 ? 'BERUNTUN X' + Math.min(combo, 5) : ''].filter(Boolean).join('  ');
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(fx, W / 2, 46);
+    if (done) label(done.a, done.b); else if (banner) label(banner.a, banner.b);
+    else if (ball.stuck && mode === 'play' && Math.floor(time * 2) % 2) { ctx.fillStyle = '#fff'; ctx.fillText('KLIK ATAU SPASI UNTUK MELEPAS BOLA', W / 2, 430); }
+  }
+  if (mode === 'pause') label('P untuk lanjut', 'Jeda');
+  ctx.restore();
+}
+
+/* ---------- loop, sizing, input ---------- */
+let last = 0;
+function tick(ts) { const dt = Math.min(0.033, (ts - last) / 1000 || 0); last = ts; update(dt); draw(); requestAnimationFrame(tick); }
+function fit() {
+  const w = Math.max(160, Math.floor(Math.min(stage.clientWidth - 18, (stage.clientHeight - 18) * 0.75)));
+  frame.style.width = w + 'px'; frame.style.height = Math.round(w / 0.75) + 'px';
+  const k = Math.min(3, (window.devicePixelRatio || 1) * w / W);
+  cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+  ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); ctx.imageSmoothingEnabled = false;
+}
+function togglePause(force) {
+  if (mode === 'play' && force !== false) { mode = 'pause'; $('btn-jeda').textContent = 'Lanjut'; }
+  else if (mode === 'pause' && force !== true) { mode = 'play'; $('btn-jeda').textContent = 'Jeda'; }
+}
+function begin() { wake(); $('btn-jeda').textContent = 'Jeda'; newGame(); }
+
+addEventListener('resize', fit);
+if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);
+document.addEventListener('visibilitychange', () => { if (document.hidden) togglePause(true); });
+addEventListener('blur', () => { keys.l = keys.r = false; });
+
+const MAP = { ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r' };
+addEventListener('keydown', e => {
+  if (e.key in MAP) { keys[MAP[e.key]] = true; if (mode === 'play') e.preventDefault(); }
+  if (e.repeat) return;
+  if (e.key === ' ' || e.key === 'ArrowUp') { if (mode === 'play') { e.preventDefault(); launch(); } }
+  if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') togglePause();
+  if (e.key === 'm' || e.key === 'M') $('btn-suara').click();
+  if (e.key === 'Enter' && (mode === 'title' || mode === 'over')) { e.preventDefault(); begin(); }
+});
+addEventListener('keyup', e => { if (e.key in MAP) keys[MAP[e.key]] = false; });
+
+const aim = e => { if (mode !== 'play') return; const r = cv.getBoundingClientRect(); pad.x = clamp((e.clientX - r.left) / r.width * W, 6 + pad.w / 2, W - 6 - pad.w / 2); };
+addEventListener('pointermove', aim);
+cv.addEventListener('pointerdown', e => { wake(); aim(e); launch(); });
+
+$('btn-mulai').addEventListener('click', begin);
+$('btn-jeda').addEventListener('click', e => { togglePause(); e.currentTarget.blur(); });
+$('btn-suara').addEventListener('click', e => { muted = !muted; e.currentTarget.textContent = 'Suara: ' + (muted ? 'mati' : 'nyala'); e.currentTarget.blur(); });
+
+titleScene(); hud(); fit();
+requestAnimationFrame(tick);
+})();
+</script>

@@ -1,25 +1,31 @@
-# Penjaga Nusantara
+# Game Arcade Nusantara
 
-Game arcade tembak-menembak orisinal bertema Nusantara, digambar seperti wayang kulit di atas kelir.
-Terbangkan Garuda, panah bala Buto, Leak, dan Kalong, lalu jaga tujuh pulau dari Sumatra sampai Papua.
+Dua game arcade orisinal bertema Nusantara. Buka berkasnya di browser, tidak perlu instalasi.
 
-## Main
+## Penjaga Nusantara (`index.html`)
 
-Buka `index.html` di browser. Tidak perlu instalasi.
+Tembak-menembak bergaya wayang kulit. Terbangkan Garuda, panah bala Buto, Leak, dan Kalong,
+lalu jaga tujuh pulau dari Sumatra sampai Papua.
 
 - Gerak: panah kiri/kanan atau A/D
 - Memanah: Spasi
 - Jeda: P, suara: M
 - Ganti gaya: G atau tombol Gaya (wayang kulit, atau retro piksel dengan suara chiptune)
 - Layar sentuh: geser jari di kelir, atau pakai tombol di bawah
+- Pusaka: Keris (panah menembus), Gong (musuh terpaku), Payung (menahan satu serangan), Kendi (tambah nyawa)
 
-## Pusaka
+## Runtuh Candi (`runtuh-candi.html`)
 
-- Keris: panah menembus barisan musuh
-- Gong: musuh terpaku beberapa detik
-- Payung: menahan satu serangan
-- Kendi: tambah satu nyawa
+Pemecah batu bergaya retro. Bongkar tumpukan batu dengan bola, lalu tangkap batu yang jatuh
+dengan tandu untuk menyusun kembali relief candi di bawah. Lima candi: Borobudur, Mendut,
+Prambanan, Penataran, dan Sukuh.
+
+- Gerak tandu: tetikus, jari, atau panah kiri/kanan
+- Lepas bola: klik, ketuk, atau Spasi
+- Jeda: P, suara: M
+- Bola yang lolos mengurangi nyawa. Batu yang lolos hanya pecah.
+- Batu emas menjatuhkan bantuan: L (tandu lebar), P (bola pelan), N (nyawa)
 
 ## Mengubah game
 
-Sumbernya ada di `src/game.html`. Jalankan `./build.sh` untuk membuat ulang `index.html`.
+Sumbernya ada di `src/`. Jalankan `./build.sh` untuk membuat ulang `index.html` dan `runtuh-candi.html`.
