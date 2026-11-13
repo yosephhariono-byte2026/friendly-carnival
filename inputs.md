@@ -10,6 +10,7 @@ Fill these in, then ask Claude to "run the six passes".
 - https://caveman.so/ (ingested 2026-11-13)
 - https://www.youtube.com/watch?v=u2QqWkMv3Lg (ingested 2026-11-13)
 - https://www.youtube.com/watch?v=jdbOVepEtUE (raw saved 2026-11-13; only the verification and trust sections atomized so far)
+- https://www.youtube.com/watch?v=g326FZa94FU (raw saved 2026-11-13; yap session and brief sections atomized)
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->
