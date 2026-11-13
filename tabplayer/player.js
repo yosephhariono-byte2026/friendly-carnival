@@ -7,11 +7,19 @@
 //   time: "12/8", keySig: ["F#", ...] // birama dan tanda kunci untuk not balok
 //   sections: {bar: "label"},        // label birama (A, B, pizz., ...)
 //   pizz: [bar, ...],                // birama yang dipetik
+//   meters: {26:"2/4", 27:"4/4"},    // opsional: ganti tanda birama mulai birama itu
+//   token boleh diberi tanda: "F4:4!tr" (trill), "E4:1!pz" (pizz. satu nada), "E4:1!arco"
 //   bars: ["F4:1 G4:1 r4", ...]      // nada:durasi, r = istirahat, ~ = sambung ke token sebelumnya
 // }
 (function () {
 const S = window.SONG_CONFIG;
 const BARS = S.bars, SECTIONS = S.sections || {}, BAR = S.barLen, PIZZ = new Set(S.pizz || []);
+// panjang tiap birama (satuan 1/8), mengikuti S.meters kalau ada ganti tanda birama
+const METERS = S.meters || {}, BL = [], BS = [];
+{ let len = BAR, at = 0;
+  BARS.forEach((_, i) => { if (METERS[i+1]){ const [n,d]=METERS[i+1].split("/"); len = n*8/d; } BL.push(len); BS.push(at); at += len; });
+  BS.push(at); }
+const barOf = t => { let b = 0; while (b < BARS.length-1 && BS[b+1] <= t) b++; return b; };   // indeks 0..
 
 // Urutan senar: 0=E, 1=A, 2=D, 3=G. Di layar (kiri ke kanan) G D A E.
 const STRINGS = [ { name:"E", midi:76, color:"#ef4a43" }, { name:"A", midi:69, color:"#3b9cf2" },
@@ -40,26 +48,31 @@ function placeNote(p, midi){
 }
 const pretty = p => p.replace(/^([A-G])#/,"$1♯").replace(/^([A-G])b/,"$1♭");
 
+// nada atas trill: huruf berikutnya, dengan tanda kunci
+function trillUpper(p){ const m=parsePitch(p), i=LETTERS.indexOf(m[1]), L=LETTERS[(i+1)%7], oct=+m[3]+(i===6?1:0);
+  const k=(S.keySig||[]).find(x=>x[0]===L); return midiOf(L+(k?k[1]:"")+oct); }
 const EVENTS=[]; let pos=0;
 BARS.forEach((bar,i)=>{
   const barNo=i+1; let sum=0;
   for (const tok of bar.trim().split(/\s+/)){
-    const cont=tok.startsWith("~"), t=tok.replace(/~/g,"");
+    const [body, ...flags]=tok.split("!"), cont=body.startsWith("~"), t=body.replace(/~/g,"");
     if (t[0]==="r"){ const d=+t.slice(1); pos+=d; sum+=d; continue; }
     const [p,ds]=t.split(":"), d=+ds;
     if (cont) EVENTS[EVENTS.length-1].dur+=d;
-    else { const midi=midiOf(p); EVENTS.push({ start:pos, dur:d, pitch:p, midi, bar:barNo, pizz:PIZZ.has(barNo), ...placeNote(p,midi) }); }
+    else { const midi=midiOf(p);
+      const pizz = flags.includes("pz") || (PIZZ.has(barNo) && !flags.includes("arco"));
+      EVENTS.push({ start:pos, dur:d, pitch:p, midi, bar:barNo, pizz, trill: flags.includes("tr") ? trillUpper(p) : 0, ...placeNote(p,midi) }); }
     pos+=d; sum+=d;
   }
-  if (sum!==BAR) throw new Error("Birama "+barNo+" berjumlah "+sum+", seharusnya "+BAR);
+  if (sum!==BL[i]) throw new Error("Birama "+barNo+" berjumlah "+sum+", seharusnya "+BL[i]);
 });
 // Birama yang punya nada posisi III: nada senar E dari A ke atas ikut posisi III, supaya tidak bolak-balik geser.
 const barsIII = new Set(EVENTS.filter(e=>e.pos==="III").map(e=>e.bar));
 const III_LOW = {5:[1,"1","jari 1"],6:[2,"b2","jari 2 rendah"],7:[2,"2","jari 2"]};
 for (const e of EVENTS) if (barsIII.has(e.bar) && e.string===0 && III_LOW[e.off]){
   const f=III_LOW[e.off]; Object.assign(e,{ finger:f[0], label:f[1], desc:f[2]+", posisi III", pos:"III" }); }
-const TOTAL = BARS.length*BAR;
-window.SONG = { EVENTS, TOTAL };
+const TOTAL = BS[BARS.length];
+window.SONG = { EVENTS, TOTAL, BL, BS, barOf };
 
 // ---------------------------------------------------------------------------
 // Not balok: pecah nada di garis birama dan ke nilai not standar, plus tanda istirahat
@@ -71,16 +84,16 @@ const KEY = {}; (S.keySig||[]).forEach(k=>KEY[k[0]]=k[1]);
 const ITEMS=[];   // {t, d, kind:"note"|"rest", ...}
 for (const e of EVENTS){
   const pieces=[]; let t=e.start, left=e.dur;
-  while (left>0){ const barEnd=(Math.floor(t/BAR)+1)*BAR, seg=Math.min(left,barEnd-t);
+  while (left>0){ const barEnd=BS[barOf(t)+1], seg=Math.min(left,barEnd-t);
     const vs=split(seg); if (t%S.beat) vs.reverse();   // mulai di luar ketukan: nilai kecil dulu sampai ketukan
     for (const v of vs){ pieces.push({t,d:v}); t+=v; } left-=seg; }
   pieces.forEach((pc,i)=>ITEMS.push({ ...pc, kind:"note", ev:e, step:stepOf(e.pitch), first:i===0, tie:i<pieces.length-1 }));
 }
 // istirahat
 for (let b=0;b<BARS.length;b++){
-  const s=b*BAR, en=s+BAR;
+  const s=BS[b], en=s+BL[b];
   const notes=ITEMS.filter(it=>it.kind==="note"&&it.t>=s&&it.t<en).sort((a,b)=>a.t-b.t);
-  if (!notes.length){ ITEMS.push({t:s,d:BAR,kind:"rest",whole:true}); continue; }
+  if (!notes.length){ ITEMS.push({t:s,d:BL[b],kind:"rest",whole:true}); continue; }
   let t=s;
   for (const n of notes.concat([{t:en,d:0}])){ if (n.t>t) for (const v of split(n.t-t)){ ITEMS.push({t,d:v,kind:"rest"}); t+=v; } t=Math.max(t,n.t+n.d); }
 }
@@ -88,7 +101,7 @@ ITEMS.sort((a,b)=>a.t-b.t);
 // tanda aksidental per birama
 { let mem={}, bar=-1;
   for (const it of ITEMS){ if (it.kind!=="note"||!it.first) continue;
-    const b=Math.floor(it.t/BAR); if (b!==bar){ mem={}; bar=b; }
+    const b=barOf(it.t); if (b!==bar){ mem={}; bar=b; }
     const m=parsePitch(it.ev.pitch), L=m[1]+m[3], acc=m[2]||"";
     const expect = L in mem ? mem[L] : (KEY[m[1]]||"");
     if (acc!==expect){ it.acc = acc||"n"; mem[L]=acc; }
@@ -134,7 +147,7 @@ function drawHighway(u, cur){
   // garis ketukan bergerak
   for (let k=Math.ceil(u/(S.beat))*S.beat; ; k+=S.beat){
     const dt=(k-u)*EIGHTH_SEC; if (dt>LOOK*1.2) break; const s=sOf(dt), y=py(s);
-    const isBar = k%BAR===0; g.strokeStyle=isBar? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"; g.lineWidth=isBar?2.5*s:1.5*s;
+    const isBar = BS.includes(k); g.strokeStyle=isBar? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"; g.lineWidth=isBar?2.5*s:1.5*s;
     g.beginPath(); g.moveTo(CX+(L0-CX)*s,y); g.lineTo(CX+(R0-CX)*s,y); g.stroke();
   }
   // senar
@@ -206,7 +219,7 @@ function drawFingerboard(cur, next){
   const show=cur||next;
   if (show){ const c=STRINGS[show.string].color, x0=FB_L+26; g.textAlign="left"; g.textBaseline="alphabetic";
     g.globalAlpha=cur?1:0.45;
-    const parts=[pretty(show.pitch)].concat(show.desc.split(", ")); if (show.pizz) parts.push("pizz.");
+    const parts=[pretty(show.pitch)].concat(show.desc.split(", ")); if (show.pizz) parts.push("pizz."); if (show.trill) parts.push("trill (getar ke nada atas)");
     const top=MID_B-28-parts.length*26-104;
     g.fillStyle=c; g.font="bold 26px 'DejaVu Sans'"; g.fillText("Senar "+STRINGS[show.string].name,x0,top);
     g.fillStyle="#111"; g.font="bold 64px 'DejaVu Sans'"; g.fillText(show.label,x0,top+74);
@@ -230,7 +243,9 @@ function drawStaff(u, cur){
   // isi yang bergulir
   g.save(); g.beginPath(); g.rect(FIXED_W,STAFF_T,1920-FIXED_W,STAFF_B-STAFF_T); g.clip();
   g.textAlign="center"; g.textBaseline="alphabetic";
-  for (let b=0;b<=BARS.length;b++){ const x=xT(b*BAR); if (x<FIXED_W-50||x>1940) continue;
+  for (let b=0;b<=BARS.length;b++){ const x=xT(BS[b]); if (x<FIXED_W-50||x>1940) continue;
+    if (b>0 && b<BARS.length && METERS[b+1]){ g.fillStyle="#111"; g.font="bold 20px 'DejaVu Serif'"; g.textAlign="left";
+      g.fillText(METERS[b+1],x+4,BOT_LINE-4*LINE_GAP-40); }
     g.strokeStyle="#222"; g.lineWidth=b===BARS.length?4:1.6; g.beginPath(); g.moveTo(x,BOT_LINE); g.lineTo(x,BOT_LINE-4*LINE_GAP); g.stroke();
     if (b<BARS.length){ g.fillStyle="#888"; g.font="italic 15px 'DejaVu Serif'"; g.textAlign="left"; g.fillText(String(b+1),x+4,STAFF_B-12);
       if (SECTIONS[b+1]){ g.fillStyle="#555"; g.font="italic bold 17px 'DejaVu Sans'"; g.fillText(SECTIONS[b+1],x+34,STAFF_B-12); } } }
@@ -239,7 +254,7 @@ function drawStaff(u, cur){
     const x=xT(it.t)+16;
     if (it.kind==="rest"){
       g.fillStyle="#222"; g.textAlign="center";
-      if (it.whole){ g.fillRect(xT(it.t)+BAR*ST_PX/2-11,BOT_LINE-3*LINE_GAP,22,LINE_GAP*0.5); continue; }
+      if (it.whole){ g.fillRect(xT(it.t)+it.d*ST_PX/2-11,BOT_LINE-3*LINE_GAP,22,LINE_GAP*0.5); continue; }
       if (it.d>=4){ g.fillRect(x-11,BOT_LINE-2*LINE_GAP-LINE_GAP*0.5,22,LINE_GAP*0.5); if (it.d===6) ell(x+18,BOT_LINE-2.5*LINE_GAP,2.6,2.6), g.fill(); continue; }
       if (it.d>=2){ glyph("\u{1D13D}",x,BOT_LINE-1.6*LINE_GAP,58); if (it.d===3) { ell(x+14,BOT_LINE-2.5*LINE_GAP,2.6,2.6); g.fill(); } continue; }
       glyph("\u{1D13E}",x,BOT_LINE-1.9*LINE_GAP,58); continue;
@@ -262,6 +277,8 @@ function drawStaff(u, cur){
     // ikatan
     if (it.tie){ const up=it.step<34, nx=x+it.d*ST_PX; g.strokeStyle=col; g.lineWidth=1.8; g.beginPath();
       const ty=y+(up?12:-12); g.moveTo(x+6,ty); g.quadraticCurveTo((x+nx)/2,ty+(up?14:-14),nx-6,ty); g.stroke(); }
+    // trill
+    if (it.first && e.trill){ g.fillStyle=col; g.textAlign="center"; g.font="italic bold 22px 'DejaVu Serif'"; g.fillText("tr",x,Math.min(BOT_LINE-4*LINE_GAP-14,y-22)); }
     // angka jari
     if (it.first){ g.fillStyle=STRINGS[e.string].color; g.textAlign="center"; g.font="bold 21px 'DejaVu Sans'";
       g.fillText(e.label,x,STAFF_T+30); if (e.pos==="III"){ g.font="bold 11px 'DejaVu Sans'"; g.fillText("III",x,STAFF_T+44); } }
@@ -283,7 +300,7 @@ function renderAt(sec){
   const u = sec/EIGHTH_SEC - LEAD;
   let cur=null, next=null;
   for (const e of EVENTS){ if (u>=e.start && u<e.start+e.dur) cur=e; if (e.start>u && !next) next=e; }
-  const barNow = Math.min(BARS.length, Math.max(1, Math.floor(Math.max(0,u)/BAR)+1));
+  const barNow = barOf(Math.max(0,u))+1;
   g.fillStyle="#c9b532"; g.fillRect(0,0,1920,1080);              // garis pemisah emas
   // kepala
   g.fillStyle="#101012"; g.fillRect(0,0,1920,HDR);
@@ -322,6 +339,7 @@ function schedule(from){
     const st=now+Math.max(0,s), en=now+s+d;
     const o=actx.createOscillator(), o2=actx.createOscillator(), gn=actx.createGain(), lp=actx.createBiquadFilter();
     o.type="sawtooth"; o2.type="triangle"; o.frequency.value=o2.frequency.value=freq(e.midi);
+    if (e.trill) for (let k=0, tt=st; tt<en; k++, tt+=0.075){ const f=freq(k%2?e.trill:e.midi); o.frequency.setValueAtTime(f,tt); o2.frequency.setValueAtTime(f,tt); }
     lp.type="lowpass"; lp.frequency.value=2600;
     gn.gain.setValueAtTime(0,st);
     if (e.pizz){ gn.gain.linearRampToValueAtTime(0.16,st+0.005); gn.gain.exponentialRampToValueAtTime(0.001,st+0.45); }

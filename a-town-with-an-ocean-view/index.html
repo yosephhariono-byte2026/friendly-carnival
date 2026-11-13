@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Town With An Ocean View Tab Biola</title>
+<link rel="stylesheet" href="../tabplayer/player.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div id="ctl">
+    <button id="play">Putar</button>
+    <button id="restart">Ulang</button>
+    <label>Tempo <input id="tempo" type="range"> <span id="tv"></span></label>
+    <label><input id="sound" type="checkbox" checked> Suara</label>
+  </div>
+</div>
+<script>
+// Ditranskrip dari partitur "A Town With An Ocean View" (GMS Easy Violin) milik pengguna.
+// C mayor, 4/4 (birama 26 dan 59 = 2/4), Allegretto ♩ = 100. Satuan durasi: 1/8, 0.5 = 1/16.
+// Intro 4 birama di rekaman dipadatkan jadi 1 birama tunggu. Birama 1-9 dipetik (pizz.), arco mulai nada terakhir birama 9.
+window.SONG_CONFIG = {
+  kicker: "Kiki's Delivery Service",
+  title: "A Town With An Ocean View",
+  subtitle: "Joe Hisaishi  \u00B7  C mayor  \u00B7  tab biola",
+  time: "4/4", keySig: [],
+  barLen: 8, beat: 2, tempo: 100, tempoText: "Allegretto", staffPx: 56,
+  meters: { 26:"2/4", 27:"4/4", 59:"2/4", 60:"4/4" },
+  sections: { 1:"Intro", 2:"A", 18:"B", 27:"A", 35:"C", 43:"A", 51:"B", 60:"A", 68:"Penutup" },
+  pizz: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  bars: [
+    /* 1  */ "r7 E4:1",
+    /* 2  */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 3  */ "A4:2 G4:1 F4:1 G4:2 r1 C4:1",
+    /* 4  */ "D4:1 F4:1 A4:1 C5:1 B4:1 G4:1 E4:1 D4:1",
+    /* 5  */ "E4:6 r1 E4:1",
+    /* 6  */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 7  */ "A4:2 G4:1 F4:1 G4:2 r1 E4:1",
+    /* 8  */ "D4:1 F4:1 A4:1 C5:1 D5:1 E5:1 B4:1 G4:1",
+    /* 9  */ "A4:6!pz r1 E4:1!arco",
+    /* 10 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 11 */ "A4:2 G4:1 F4:1 G4:2 r1 C4:1",
+    /* 12 */ "D4:1 F4:1 A4:1 C5:1 B4:1 G4:1 E4:1 D4:1",
+    /* 13 */ "E4:6 r1 E4:1",
+    /* 14 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 15 */ "A4:2 G4:1 F4:1 G4:2 r1 E4:1",
+    /* 16 */ "D4:1 F4:1 A4:1 C5:1 D5:1 E5:1 B4:1 G4:1",
+    /* 17 */ "A4:6 A4:1 B4:1",
+    /* 18 */ "C5:1 C5:1 C5:1 C5:1 C5:1 B4:1 A4:1 B4:1",
+    /* 19 */ "G4:6 r1 F4:0.5 G4:0.5",
+    /* 20 */ "A4:1 A4:1 A4:1 A4:1 A4:1 G4:1 F4:1 G4:1",
+    /* 21 */ "E4:6 r1 E4:1",
+    /* 22 */ "C#4:1 D4:1 F4:1 A4:1 G4:3 F4:1",
+    /* 23 */ "D#4:1 E4:1 G4:1 B4:1 D5:1 C5:1 B4:1 C5:1",
+    /* 24 */ "E5:3 D5:0.5 E5:0.5 A4:3 G4:0.5 A4:0.5",
+    /* 25 */ "E4:3 D4:0.5 E4:0.5 A3:4",
+    /* 26 */ "B3:3 E4:1",
+    /* 27 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 28 */ "A4:2 G4:1 F4:1 G4:2 r1 C4:1",
+    /* 29 */ "D4:1 F4:1 A4:1 C5:1 B4:1 G4:1 E4:1 D4:1",
+    /* 30 */ "E4:6 r1 E4:1",
+    /* 31 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 32 */ "A4:2 G4:1 F4:1 G4:2 r1 E4:1",
+    /* 33 */ "D4:1 F4:1 A4:1 C5:1 D5:1 E5:1 B4:1 G4:1",
+    /* 34 */ "A4:6 r2",
+    /* 35 */ "r1 A4:0.5 G#4:0.5 A4:1 E4:1 F4:4!tr",
+    /* 36 */ "r1 G4:0.5 F4:0.5 G4:1 D4:1 E4:4!tr",
+    /* 37 */ "r1 F4:0.5 E4:0.5 F4:1 C4:1 D4:4!tr",
+    /* 38 */ "r1 E4:0.5 D#4:0.5 E4:1 B3:1 C4:4!tr",
+    /* 39 */ "r1 A4:0.5 G#4:0.5 A4:1 E4:1 F4:4!tr",
+    /* 40 */ "r1 G4:0.5 F4:0.5 G4:1 D4:1 E4:4!tr",
+    /* 41 */ "r1 F4:0.5 E4:0.5 F4:1 C4:1 D4:4!tr",
+    /* 42 */ "r1 E4:0.5 D#4:0.5 E4:1 G#4:1 A4:2 r1 E4:1",
+    /* 43 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 44 */ "A4:2 G4:1 F4:1 G4:2 r1 C4:1",
+    /* 45 */ "D4:1 F4:1 A4:1 C5:1 B4:1 G4:1 E4:1 D4:1",
+    /* 46 */ "E4:6 r1 E4:1",
+    /* 47 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 48 */ "A4:2 G4:1 F4:1 G4:2 r1 E4:1",
+    /* 49 */ "D4:1 F4:1 A4:1 C5:1 D5:1 E5:1 B4:1 G4:1",
+    /* 50 */ "A4:6 A4:1 B4:1",
+    /* 51 */ "C5:1 C5:1 C5:1 C5:1 C5:1 B4:1 A4:1 B4:1",
+    /* 52 */ "G4:6 r1 F4:0.5 G4:0.5",
+    /* 53 */ "A4:1 A4:1 A4:1 A4:1 A4:1 G4:1 F4:1 G4:1",
+    /* 54 */ "E4:6 r1 E4:1",
+    /* 55 */ "C#4:1 D4:1 F4:1 A4:1 G4:3 F4:1",
+    /* 56 */ "D#4:1 E4:1 G4:1 B4:1 D5:1 C5:1 B4:1 C5:1",
+    /* 57 */ "E5:3 D5:0.5 E5:0.5 A4:3 G4:0.5 A4:0.5",
+    /* 58 */ "E4:3 D4:0.5 E4:0.5 A3:4",
+    /* 59 */ "B3:2 r1 E4:1",
+    /* 60 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 61 */ "A4:2 G4:1 F4:1 G4:2 r1 C4:1",
+    /* 62 */ "D4:1 F4:1 A4:1 C5:1 B4:1 G4:1 E4:1 D4:1",
+    /* 63 */ "E4:6 r1 E4:1",
+    /* 64 */ "C5:2 r1 E4:1 B4:2 r1 E4:1",
+    /* 65 */ "A4:2 G4:1 F4:1 G4:2 r1 E4:1",
+    /* 66 */ "D4:1 F4:1 A4:1 C5:1 D5:1 E5:1 B4:1 G4:1",
+    /* 67 */ "A4:6 r1 E4:1",
+    /* 68 */ "D4:1 F4:1 A4:1 C5:1 D5:1 E5:1 B4:1 G4:1",
+    /* 69 */ "A4:8",
+  ],
+};
+</script>
+<script src="../tabplayer/player.js"></script>
+</body>
+</html>
