@@ -9,6 +9,7 @@ Fill these in, then ask Claude to "run the six passes".
 - https://github.com/rtk-ai/rtk (ingested 2026-11-13)
 - https://caveman.so/ (ingested 2026-11-13)
 - https://www.youtube.com/watch?v=u2QqWkMv3Lg (ingested 2026-11-13)
+- https://www.youtube.com/watch?v=jdbOVepEtUE (raw saved 2026-11-13; only the verification and trust sections atomized so far)
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->

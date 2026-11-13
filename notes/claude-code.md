@@ -6,7 +6,7 @@ confidence: seen
 
 # Claude Code (indeks)
 
-Indeks catatan tentang Claude Code, asisten coding dari Anthropic yang berjalan di terminal, editor (IDE), dan web. Sumber: video The Coding Sloth (1000+ jam memakai Claude Code) dan kursus JavaScript Mastery (Claude Code Full Course 2026). Penilaian tingkat (S, A, B, C) adalah pendapat The Coding Sloth. Tiap catatan menyebut sumbernya sendiri.
+Indeks catatan tentang Claude Code, asisten coding dari Anthropic yang berjalan di terminal, editor (IDE), dan web. Sumber: video The Coding Sloth (1000+ jam memakai Claude Code), kursus JavaScript Mastery (Claude Code Full Course 2026), dan kursus Nate Herk untuk non-programmer (sebagian). Penilaian tingkat (S, A, B, C) adalah pendapat The Coding Sloth. Tiap catatan menyebut sumbernya sendiri.
 
 **Dasar:** [[claude-code-bekerja-dalam-loop]], [[perhatikan-apa-yang-dilakukan-claude]], [[kode-tetap-bisa-terkirim-ke-model]], [[langganan-untuk-belajar-api-untuk-otomatisasi]], [[claude-p-untuk-tugas-sekali-jalan]], [[pilih-model-sesuai-tugas]]
 
@@ -19,6 +19,8 @@ Indeks catatan tentang Claude Code, asisten coding dari Anthropic yang berjalan 
 **Cara kerja:** [[bangun-fitur-kecil-satu-per-satu]], [[plan-mode-untuk-tugas-besar]], [[fitur-samar-perlu-dirumuskan-sebelum-plan-mode]], [[baca-rencana-sebelum-menyetujui]], [[rencana-tidak-menggantikan-review-hasil]], [[pakai-fitur-saat-masalahnya-muncul]], [[beri-kebebasan-secara-bertahap]], [[model-pintar-merencanakan-model-murah-mengerjakan]], [[verifikasi-adalah-praktik-terpenting]], [[tulis-tes-dulu-baru-kodenya]], [[claude-tidak-bisa-melihat-tampilan]]
 
 **Hemat token dan konteks:** [[pemakaian-dihitung-dari-token-bukan-jumlah-pesan]], [[konteks-makin-penuh-claude-makin-bodoh]], [[satu-tugas-satu-sesi-baru]], [[cegah-claude-membaca-hal-yang-tidak-perlu]], [[prompt-harus-sangat-spesifik]], [[compact-otomatis-tanda-mulai-sesi-baru]], [[compact-hanya-untuk-pekerjaan-yang-sama]], [[clear-saat-pindah-ke-tugas-yang-tidak-berkaitan]], [[context-rot-mulai-jauh-sebelum-penuh]]
+
+**Memercayai hasil AI (tanpa harus bisa coding):** [[jangan-lengah-karena-hasil-ai-terlihat-bagus]], [[suruh-ai-membuktikan-hasil-kerjanya]], [[cek-seperti-memeriksa-kerja-manusia]], [[tanya-claude-apa-yang-bisa-salah]], [[uji-dengan-contoh-yang-jawabannya-sudah-diketahui]], [[sebutkan-apa-yang-tidak-boleh-dilakukan]], [[larangan-di-prompt-bukan-pagar-cabut-alatnya]], [[pilih-solusi-ai-paling-sederhana]], [[aturan-tetap-lebih-andal-dari-keputusan-ai]], [[lepas-pengawasan-bertahap-seperti-belajar-sepeda]]
 
 **Keamanan:** [[jangan-hanya-model-yang-sama-menilai-keamanan]], [[pilah-temuan-keamanan-sebelum-memperbaiki]], [[kode-sementara-buatan-ai-bisa-membocorkan-data]], [[otorisasi-admin-harus-di-server]], [[klaim-insiden-keamanan-model-ai-2026]]
 
