@@ -1,7 +1,7 @@
 // Partitur cetak (A4): not balok + angka jari + senar, dari SONG_CONFIG yang sama dengan video.
 // Dimuat setelah player.js di halaman tanpa kanvas; dipakai oleh render_sheet.js.
 (function () {
-const S = window.SONG_CONFIG, { ITEMS, STRINGS } = window.SONG;
+const S = window.SONG_CONFIG, { ITEMS, STRINGS, BS, EVENTS } = window.SONG, METERS = S.meters || {};
 const BAR = S.barLen, NB = S.bars.length, SECTIONS = S.sections || {};
 const PER = S.sheetBarsPerLine || (BAR >= 12 ? 3 : BAR <= 6 ? 5 : 4);
 const W = 700, GAP = 8.6, Y0 = 46, YB = Y0 + 4 * GAP, H = YB + 56;
@@ -18,15 +18,15 @@ const text = (s, x, y, size, opt = "") => `<text x="${f(x)}" y="${f(y)}" font-si
 const glyph = (ch, x, y, size) => text(ch, x, y, size, `font-family="FreeSerif" fill="${INK}"`);
 
 // jarak antar nada: semi-proporsional terhadap durasi, dengan ruang minimum untuk angka jari
-function layout(bar) {
-  const t0 = (bar - 1) * BAR, t1 = t0 + BAR;
+function layout(bar, inlineMeter) {
+  const t0 = BS[bar - 1], t1 = BS[bar];
   const its = ITEMS.filter(it => it.t >= t0 && it.t < t1);
   const onsets = [...new Set(its.map(it => it.t))].sort((a, c) => a - c);
   const hasAcc = t => its.some(it => it.t === t && it.acc);
   const wts = onsets.map((t, i) => 0.8 + Math.pow((onsets[i + 1] ?? t1) - t, 0.6) + (hasAcc(onsets[i + 1]) ? 0.45 : 0)
     + (/^#|^b/.test((its.find(it => it.t === t && it.first) || { ev: {} }).ev.label || "") ? 0.3 : 0));
   return { its, onsets, wts, sum: wts.reduce((a, c) => a + c, 0),
-    padL: GAP * 1.6 + (hasAcc(t0) ? GAP * 1.2 : 0), padR: GAP * 0.9 };
+    padL: GAP * 1.6 + (hasAcc(t0) ? GAP * 1.2 : 0) + (inlineMeter ? GAP * 2.6 : 0), padR: GAP * 0.9 };
 }
 let lastK = 0;
 
@@ -42,18 +42,18 @@ function system(firstBar, count, isFirst) {
     out.push(glyph(ACC[k[1]], x, yOf(st) + (k[1] === "#" ? GAP * 0.62 : GAP * 0.35), GAP * 2.3)); x += GAP * 1.05;
   }
   x += GAP * 0.6;
-  if (isFirst) {
-    const [tn, td] = (S.time || "4/4").split("/");
+  if (isFirst || METERS[firstBar]) {
+    const [tn, td] = (METERS[firstBar] || S.time || "4/4").split("/");
     const o = `font-family="FreeSerif" font-weight="bold" text-anchor="middle" fill="${INK}"`;
     out.push(text(tn, x + GAP, Y0 + 2 * GAP - 1, GAP * 2.75, o), text(td, x + GAP, YB - 1, GAP * 2.75, o));
     x += GAP * 3;
   }
   const head = x + GAP * 0.4;
   // baris angka jari turun kalau ada nada di bawah paranada (garis bantu)
-  const lows = ITEMS.filter(it => it.kind === "note" && it.t >= (firstBar - 1) * BAR && it.t < (firstBar - 1 + count) * BAR).map(it => it.step);
+  const lows = ITEMS.filter(it => it.kind === "note" && it.t >= BS[firstBar - 1] && it.t < BS[firstBar - 1 + count]).map(it => it.step);
   const FY = YB + Math.max(27, (30 - Math.min(30, ...lows)) * GAP / 2 + 17), h = FY + 29;
   // lebar birama mengikuti isinya; baris terakhir yang pendek tidak direnggangkan
-  const L = Array.from({ length: count }, (_, b) => layout(firstBar + b));
+  const L = Array.from({ length: count }, (_, b) => layout(firstBar + b, b > 0 && METERS[firstBar + b]));
   const pads = L.reduce((a, l) => a + l.padL + l.padR, 0), wsum = L.reduce((a, l) => a + l.sum, 0);
   let k = (W - 2 - head - pads) / wsum;
   if (count < PER && lastK) k = Math.min(k, lastK); else lastK = k;
@@ -66,7 +66,11 @@ function system(firstBar, count, isFirst) {
   let bx = head;
   for (let b = 0; b < count; b++) {
     if (b) bx += barWs[b - 1];
-    const bar = firstBar + b, barW = barWs[b], lay = L[b], t0 = (bar - 1) * BAR, t1 = t0 + BAR;
+    const bar = firstBar + b, barW = barWs[b], lay = L[b], t0 = BS[bar - 1], t1 = BS[bar];
+    if (b > 0 && METERS[bar]) {   // ganti tanda birama di tengah baris
+      const [tn, td] = METERS[bar].split("/"), o = `font-family="FreeSerif" font-weight="bold" text-anchor="middle" fill="${INK}"`;
+      out.push(text(tn, bx + GAP * 1.5, Y0 + 2 * GAP - 1, GAP * 2.75, o), text(td, bx + GAP * 1.5, YB - 1, GAP * 2.75, o));
+    }
     // garis birama (ganda sebelum bagian baru, penutup di akhir lagu)
     const nextSec = bar < NB && SECTIONS[bar + 1];
     if (bar === NB) { out.push(line(bx + barW - 5, Y0, bx + barW - 5, YB, 1), `<rect x="${f(bx + barW - 3)}" y="${Y0}" width="3" height="${4 * GAP}" fill="${INK}"/>`); }
@@ -124,12 +128,15 @@ function system(firstBar, count, isFirst) {
         const nx = (xAt[it.t + it.d] ?? bx + barW + 8) + 5, up = it.step < MID, ty = y + (up ? 6 : -6), dy = up ? 6 : -6;
         out.push(`<path d="M${f(xc + 3)} ${f(ty)} Q${f((xc + nx) / 2)} ${f(ty + dy)} ${f(nx - 3)} ${f(ty)}" fill="none" stroke="${INK}" stroke-width="1.2"/>`);
       }
+      if (it.first && e.trill) out.push(text("tr", xc, Math.min(Y0 - 7, y - 13), 13, `font-family="DejaVu Serif" font-style="italic" font-weight="bold" text-anchor="middle" fill="${INK}"`));
       // angka jari dan senar di bawah paranada
       if (it.first) {
         const c = COL[e.string];
         out.push(text(e.label, xc, FY, 13.5, `font-family="DejaVu Sans" font-weight="bold" text-anchor="middle" fill="${c}"`));
         out.push(text(STRINGS[e.string].name + (e.pos === "III" ? "·III" : ""), xc, FY + 13, 8.5, `font-family="DejaVu Sans" text-anchor="middle" fill="${c}" opacity=".85"`));
-        if (e.pizz) out.push(text("pizz.", xc, FY + 24, 8, `font-family="DejaVu Serif" font-style="italic" text-anchor="middle" fill="#555"`));
+        // pizz./arco cukup ditulis di awal tiap perubahan
+        const prev = EVENTS[EVENTS.indexOf(e) - 1], tag = e.pizz && !(prev && prev.pizz) ? "pizz." : !e.pizz && prev && prev.pizz ? "arco" : "";
+        if (tag) out.push(text(tag, xc, FY + 25, 9.5, `font-family="DejaVu Serif" font-style="italic" font-weight="bold" text-anchor="middle" fill="#444"`));
       }
     }
     // balok

@@ -17,7 +17,7 @@ const FPS = 30;
   if (errs.length) throw new Error(errs.join('\n'));
   if (process.argv[4]) await p.evaluate(t => setTempo(t), +process.argv[4]);
   const info = await p.evaluate(() => ({
-    events: SONG.EVENTS.map(e => ({ s: e.start, d: e.dur, m: e.midi, pizz: e.pizz })),
+    events: SONG.EVENTS.map(e => ({ s: e.start, d: e.dur, m: e.midi, pizz: e.pizz, trill: e.trill })),
     total: SONG.TOTAL, ...SONG_TIMING() }));
   const dur = (info.total + info.LEAD) * info.eighth;
 

@@ -22,7 +22,12 @@ for e in ev["events"]:
         n = int(ln * SR)
         t = np.arange(n) / SR
         vib = 1 + 0.004 * np.sin(2 * np.pi * 5.5 * t) * np.clip((t - 0.25) / 0.3, 0, 1)
-        phase = 2 * np.pi * f0 * np.cumsum(vib) / SR
+        f = np.full(n, f0)
+        if e.get("trill"):                      # trill: gantian nada asli dan nada atas tiap 0.075 detik
+            f1 = 440 * 2 ** ((e["trill"] - 69) / 12)
+            f = np.where((t // 0.075).astype(int) % 2 == 1, f1, f0)
+            vib = np.ones(n)
+        phase = 2 * np.pi * np.cumsum(f * vib) / SR
         sig = sum(a * np.sin(k * phase) for k, a in enumerate(harm, 1) if k * f0 < 9000)
         att, rel = int(min(0.06, ln / 4) * SR), int(min(0.08, ln / 4) * SR)
         envl = np.ones(n)
