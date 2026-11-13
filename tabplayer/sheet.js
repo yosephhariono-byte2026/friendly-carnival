@@ -49,6 +49,9 @@ function system(firstBar, count, isFirst) {
     x += GAP * 3;
   }
   const head = x + GAP * 0.4;
+  // baris angka jari turun kalau ada nada di bawah paranada (garis bantu)
+  const lows = ITEMS.filter(it => it.kind === "note" && it.t >= (firstBar - 1) * BAR && it.t < (firstBar - 1 + count) * BAR).map(it => it.step);
+  const FY = YB + Math.max(27, (30 - Math.min(30, ...lows)) * GAP / 2 + 17), h = FY + 29;
   // lebar birama mengikuti isinya; baris terakhir yang pendek tidak direnggangkan
   const L = Array.from({ length: count }, (_, b) => layout(firstBar + b));
   const pads = L.reduce((a, l) => a + l.padL + l.padR, 0), wsum = L.reduce((a, l) => a + l.sum, 0);
@@ -78,13 +81,13 @@ function system(firstBar, count, isFirst) {
     const its = lay.its, xAt = {}; let acc = bx + lay.padL;
     lay.onsets.forEach((t, i) => { xAt[t] = acc; acc += lay.wts[i] * k; });
 
-    // kelompok balok (beam): not 1/8 berturut-turut dalam satu ketukan
+    // kelompok balok (beam): not 1/8 dan 1/16 berturut-turut dalam satu ketukan
     const groups = []; let cur = null;
     for (const it of its) {
       const beat = Math.floor((it.t - t0) / S.beat);
-      if (it.kind === "note" && it.d === 1) {
-        if (cur && cur.beat === beat && cur.end === it.t) { cur.notes.push(it); cur.end = it.t + 1; }
-        else { cur = { beat, end: it.t + 1, notes: [it] }; groups.push(cur); }
+      if (it.kind === "note" && it.d < 2) {
+        if (cur && cur.beat === beat && cur.end === it.t) { cur.notes.push(it); cur.end = it.t + it.d; }
+        else { cur = { beat, end: it.t + it.d, notes: [it] }; groups.push(cur); }
       } else cur = null;
     }
     const beamed = new Map();
@@ -102,16 +105,19 @@ function system(firstBar, count, isFirst) {
       const hollow = it.d >= 4;
       out.push(`<ellipse cx="${f(xc)}" cy="${f(y)}" rx="${hollow && it.d >= 8 ? 6 : 5.3}" ry="3.75" transform="rotate(-20 ${f(xc)} ${f(y)})" ` +
         (hollow ? `fill="none" stroke="${INK}" stroke-width="1.7"` : `fill="${INK}"`) + `/>`);
-      if ([3, 6, 12].includes(it.d)) out.push(`<circle cx="${f(xc + 10)}" cy="${f(y - (it.step % 2 === 0 ? GAP / 2 : 0))}" r="1.6" fill="${INK}"/>`);
+      if ([1.5, 3, 6, 12].includes(it.d)) out.push(`<circle cx="${f(xc + 10)}" cy="${f(y - (it.step % 2 === 0 ? GAP / 2 : 0))}" r="1.6" fill="${INK}"/>`);
       // tangkai + bendera (not tunggal)
       if (it.d < 8 && !beamed.has(it)) {
         const up = it.step < MID, sx = up ? xc + 4.9 : xc - 4.9;
         const len = Math.max(GAP * 3.5, Math.abs(y - yOf(MID)));
         const sy = up ? y - len : y + len;
         out.push(line(sx, y + (up ? -1 : 1), sx, sy, 1.1));
-        if (it.d === 1) out.push(up
-          ? `<path d="M${f(sx)} ${f(sy)} c1 6 9 9 7.5 19 c0 -6 -3.5 -10 -7.5 -12 z" fill="${INK}"/>`
-          : `<path d="M${f(sx)} ${f(sy)} c1 -6 9 -9 7.5 -19 c0 6 -3.5 10 -7.5 12 z" fill="${INK}"/>`);
+        for (let k = 0; k < (it.d < 1 ? 2 : it.d < 2 ? 1 : 0); k++) {
+          const fy = sy + (up ? k * 6.5 : -k * 6.5);
+          out.push(up
+            ? `<path d="M${f(sx)} ${f(fy)} c1 6 9 9 7.5 19 c0 -6 -3.5 -10 -7.5 -12 z" fill="${INK}"/>`
+            : `<path d="M${f(sx)} ${f(fy)} c1 -6 9 -9 7.5 -19 c0 6 -3.5 10 -7.5 12 z" fill="${INK}"/>`);
+        }
       }
       // ikatan
       if (it.tie) {
@@ -121,9 +127,9 @@ function system(firstBar, count, isFirst) {
       // angka jari dan senar di bawah paranada
       if (it.first) {
         const c = COL[e.string];
-        out.push(text(e.label, xc, YB + 27, 13.5, `font-family="DejaVu Sans" font-weight="bold" text-anchor="middle" fill="${c}"`));
-        out.push(text(STRINGS[e.string].name + (e.pos === "III" ? "·III" : ""), xc, YB + 40, 8.5, `font-family="DejaVu Sans" text-anchor="middle" fill="${c}" opacity=".85"`));
-        if (e.pizz) out.push(text("pizz.", xc, YB + 51, 8, `font-family="DejaVu Serif" font-style="italic" text-anchor="middle" fill="#555"`));
+        out.push(text(e.label, xc, FY, 13.5, `font-family="DejaVu Sans" font-weight="bold" text-anchor="middle" fill="${c}"`));
+        out.push(text(STRINGS[e.string].name + (e.pos === "III" ? "·III" : ""), xc, FY + 13, 8.5, `font-family="DejaVu Sans" text-anchor="middle" fill="${c}" opacity=".85"`));
+        if (e.pizz) out.push(text("pizz.", xc, FY + 24, 8, `font-family="DejaVu Serif" font-style="italic" text-anchor="middle" fill="#555"`));
       }
     }
     // balok
@@ -142,10 +148,18 @@ function system(firstBar, count, isFirst) {
       ya += up ? -shift : shift; yb += up ? -shift : shift;
       ns.forEach((n, i) => out.push(line(xs[i], ys[i] + (up ? -1 : 1), xs[i], beamY(xs[i]), 1.1)));
       const th = up ? 4 : -4, x1 = xs[0] - 0.55, x2 = xs[xs.length - 1] + 0.55;
-      out.push(`<path d="M${f(x1)} ${f(ya)} L${f(x2)} ${f(yb)} L${f(x2)} ${f(yb + th)} L${f(x1)} ${f(ya + th)} z" fill="${INK}"/>`);
+      const beam = (xa, xb, off) => `<path d="M${f(xa)} ${f(beamY(xa) + off)} L${f(xb)} ${f(beamY(xb) + off)} L${f(xb)} ${f(beamY(xb) + off + th)} L${f(xa)} ${f(beamY(xa) + off + th)} z" fill="${INK}"/>`;
+      out.push(beam(x1, x2, 0));
+      // balok kedua untuk not 1/16 (sambung ke tetangga 1/16, atau potongan pendek)
+      const off2 = up ? 6.5 : -6.5, six = i => ns[i] && ns[i].d < 1;
+      ns.forEach((n, i) => {
+        if (!six(i)) return;
+        if (six(i + 1)) out.push(beam(xs[i] - 0.55, xs[i + 1] + 0.55, off2));
+        else if (!six(i - 1)) out.push(i + 1 < ns.length ? beam(xs[i] - 0.55, xs[i] + 7, off2) : beam(xs[i] - 7, xs[i] + 0.55, off2));
+      });
     }
   }
-  return `<svg class="sys" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out.join("")}</svg>`;
+  return `<svg class="sys" viewBox="0 0 ${W} ${h}" width="${W}" height="${h}" xmlns="http://www.w3.org/2000/svg">${out.join("")}</svg>`;
 }
 
 function rest(it, x) {

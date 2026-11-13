@@ -64,7 +64,7 @@ window.SONG = { EVENTS, TOTAL };
 // ---------------------------------------------------------------------------
 // Not balok: pecah nada di garis birama dan ke nilai not standar, plus tanda istirahat
 // ---------------------------------------------------------------------------
-const STD = [12,8,6,4,3,2,1];
+const STD = [12,8,6,4,3,2,1.5,1,0.5];   // 0.5 = 1/16, 1.5 = 1/8 bertitik
 const split = d => { const out=[]; for (const v of STD) while (d>=v){ out.push(v); d-=v; } return out; };
 const stepOf = p => { const m=parsePitch(p); return (+m[3])*7+LETTERS.indexOf(m[1]); };
 const KEY = {}; (S.keySig||[]).forEach(k=>KEY[k[0]]=k[1]);
@@ -72,7 +72,8 @@ const ITEMS=[];   // {t, d, kind:"note"|"rest", ...}
 for (const e of EVENTS){
   const pieces=[]; let t=e.start, left=e.dur;
   while (left>0){ const barEnd=(Math.floor(t/BAR)+1)*BAR, seg=Math.min(left,barEnd-t);
-    for (const v of split(seg)){ pieces.push({t,d:v}); t+=v; } left-=seg; }
+    const vs=split(seg); if (t%S.beat) vs.reverse();   // mulai di luar ketukan: nilai kecil dulu sampai ketukan
+    for (const v of vs){ pieces.push({t,d:v}); t+=v; } left-=seg; }
   pieces.forEach((pc,i)=>ITEMS.push({ ...pc, kind:"note", ev:e, step:stepOf(e.pitch), first:i===0, tie:i<pieces.length-1 }));
 }
 // istirahat
@@ -252,11 +253,12 @@ function drawStaff(u, cur){
     // kepala not
     const hollow=it.d>=4; g.save(); g.translate(x,y); g.rotate(-0.35); g.beginPath(); g.ellipse(0,0,9.5,6.6,0,0,Math.PI*2); g.restore();
     if (hollow){ g.lineWidth=2.6; g.strokeStyle=col; g.stroke(); } else { g.fillStyle=col; g.fill(); }
-    if ([3,6,12].includes(it.d)){ const dy=it.step%2===0? -LINE_GAP/2 : 0; ell(x+17,y+dy,2.8,2.8); g.fillStyle=col; g.fill(); }
+    if ([1.5,3,6,12].includes(it.d)){ const dy=it.step%2===0? -LINE_GAP/2 : 0; ell(x+17,y+dy,2.8,2.8); g.fillStyle=col; g.fill(); }
     // tangkai dan bendera
     if (it.d<8){ const up=it.step<34; g.strokeStyle=col; g.lineWidth=1.8; const sx=up? x+8.6 : x-8.6, sy=up? y-52 : y+52;
       g.beginPath(); g.moveTo(sx,y+(up?-2:2)); g.lineTo(sx,sy); g.stroke();
-      if (it.d===1){ g.beginPath(); g.moveTo(sx,sy); if (up) g.bezierCurveTo(sx+4,sy+14,sx+18,sy+18,sx+12,sy+34); else g.bezierCurveTo(sx+4,sy-14,sx+18,sy-18,sx+12,sy-34); g.lineWidth=2.4; g.stroke(); } }
+      for (let k=0; k<(it.d<1?2:it.d<2?1:0); k++){ const fy=sy+(up?k*12:-k*12); g.beginPath(); g.moveTo(sx,fy);
+        if (up) g.bezierCurveTo(sx+4,fy+14,sx+18,fy+18,sx+12,fy+34); else g.bezierCurveTo(sx+4,fy-14,sx+18,fy-18,sx+12,fy-34); g.lineWidth=2.4; g.stroke(); } }
     // ikatan
     if (it.tie){ const up=it.step<34, nx=x+it.d*ST_PX; g.strokeStyle=col; g.lineWidth=1.8; g.beginPath();
       const ty=y+(up?12:-12); g.moveTo(x+6,ty); g.quadraticCurveTo((x+nx)/2,ty+(up?14:-14),nx-6,ty); g.stroke(); }
