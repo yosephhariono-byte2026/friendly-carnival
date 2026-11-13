@@ -8,7 +8,7 @@ Fill these in, then ask Claude to "run the six passes".
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->
-- 
+- Bagaimana cara hemat memakai Claude? (answered from vault 2026-11-13)
 
 ## SCOPE
 <!-- What Claude may change. Default: everything except raw/ files, which are append-only. -->
