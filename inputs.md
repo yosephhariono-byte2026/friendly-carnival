@@ -14,6 +14,7 @@ Fill these in, then ask Claude to "run the six passes".
 <!-- Questions the vault must be able to answer. -->
 - Bagaimana cara hemat memakai Claude? (answered from vault 2026-11-13)
 - Apa itu ponytail, rtk, dan caveman? (answered from vault 2026-11-13)
+- Bagaimana cara memastikan hasil kerja Claude benar sebelum saya terima? (answered from vault 2026-11-13)
 
 ## SCOPE
 <!-- What Claude may change. Default: everything except raw/ files, which are append-only. -->

@@ -11,3 +11,4 @@ Questions the vault could not answer from its own notes, and what is missing.
 | Benarkah insiden model AI keluar dari sandbox (OpenAI Juli 2026, Anthropic 4 insiden)? | Hanya disebut di kursus JavaScript Mastery. Perlu sumber asli dari OpenAI dan Anthropic. |
 | Di token ke berapa kualitas Claude mulai turun? | Dua sumber beda angka (50 ribu vs 100 sampai 200 ribu), keduanya dari pengalaman. Perlu pengukuran. |
 | Nama persis perintah untuk melihat auto-memory, dan ejaan pengaturan skill manual? | Subtitle otomatis menghilangkan atau mengubahnya. Perlu dokumentasi resmi Claude Code. |
+| Cara memastikan hasil Claude benar: bagaimana kalau saya tidak bisa membaca kode? | Semua sumber menganggap pengguna bisa membaca kode atau git diff. Belum ada sumber untuk pengguna non-teknis. |
