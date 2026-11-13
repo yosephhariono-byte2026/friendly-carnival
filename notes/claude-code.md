@@ -16,7 +16,7 @@ Indeks catatan tentang Claude Code, asisten coding dari Anthropic yang berjalan 
 
 **Fitur:** [[perintah-loop-untuk-tugas-terjadwal]], [[perintah-target-kerja-sampai-selesai]], [[subagent-punya-konteks-sendiri-tapi-boros]], [[worktree-untuk-kerja-paralel]], [[mode-suara-untuk-prompt-lebih-deskriptif]], [[btw-untuk-bertanya-tanpa-mengganggu]], [[pindah-sesi-antar-perangkat]], [[mode-shell-dengan-tanda-seru]]
 
-**Lain-lain:** [[tetap-belajar-coding-walau-pakai-ai]], [[alternatif-claude-code]]
+**Lain-lain:** [[alat-hemat-token]], [[tetap-belajar-coding-walau-pakai-ai]], [[alternatif-claude-code]]
 
 > "I have spent an unhealthy amount of time using Claude Code"
 
