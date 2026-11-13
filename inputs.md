@@ -4,7 +4,7 @@ Fill these in, then ask Claude to "run the six passes".
 
 ## SOURCES
 <!-- URLs or file paths to ingest, one per line. -->
-- 
+- https://www.youtube.com/watch?v=YAsxyoTWFDA (ingested 2026-11-13)
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->
