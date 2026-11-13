@@ -85,7 +85,7 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; image-re
   <h1>Candi Runtuh</h1>
   <div class="stat"><span>Skor</span><b id="skor">0</b></div>
   <div class="stat"><span>Rekor</span><b id="rekor">0</b></div>
-  <div class="stat"><span>Nyawa</span><b id="nyawa">4</b></div>
+  <div class="stat"><span>Nyawa</span><b id="nyawa">3</b></div>
   <button class="btn-kecil" id="btn-jeda" type="button">Jeda</button>
   <button class="btn-kecil" id="btn-suara" type="button">Suara: nyala</button>
 </header>
@@ -181,7 +181,7 @@ function makeRelief(i) {
 }
 
 /* ---------- state ---------- */
-let mode = 'title', time = 0, level = 1, score = 0, lives = 4, hi = 0;
+let mode = 'title', time = 0, level = 1, score = 0, lives = 3, hi = 0;
 let bricks = [], stones = [], items = [], flyers = [], parts = [], texts = [], trail = [];
 let tiles = new Uint8Array(NT), flash = new Float32Array(NT), relief = null;
 let ball, pad, combo = 0, hits = 0, wide = 0, slow = 0, banner = null, done = null, shake = 0;
@@ -236,12 +236,12 @@ function setupLevel() {
   banner = { t: 2.4, a: (putaran() ? 'Putaran ' + (putaran() + 1) + ' ' : '') + 'Candi ' + level, b: cur().nama };
 }
 function newGame() {
-  score = 0; lives = 4; level = 1; parts = []; texts = [];
-  pad = { x: W / 2, w: 84 };
+  score = 0; lives = 3; level = 1; parts = []; texts = [];
+  pad = { x: W / 2, w: 76 };
   setupLevel(); mode = 'play'; layar.hidden = true; hud();
   tune([330, 440, 660], 90);
 }
-function titleScene() { level = 1; pad = { x: W / 2, w: 84 }; setupLevel(); banner = null; tiles.fill(2); }
+function titleScene() { level = 1; pad = { x: W / 2, w: 76 }; setupLevel(); banner = null; tiles.fill(2); }
 function hud() { $('skor').textContent = score; $('rekor').textContent = Math.max(hi, score); $('nyawa').textContent = Math.max(lives, 0); }
 function say(x, y, s) { texts.push({ x: clamp(x, 60, W - 60), y, t: 1.1, s }); }
 function burst(x, y, n, col) {
@@ -253,7 +253,7 @@ const placed = () => { let n = 0; for (let i = 0; i < NT; i++) if (tiles[i] === 
 
 /* ---------- update ---------- */
 function speed() {
-  return (270 + 13 * Math.min(level - 1, 4) + 22 * Math.min(putaran(), 3)) * (1 + Math.min(0.3, Math.floor(hits / 12) * 0.03)) * (slow > 0 ? 0.7 : 1);
+  return (295 + 14 * Math.min(level - 1, 4) + 22 * Math.min(putaran(), 3)) * (1 + Math.min(0.3, Math.floor(hits / 12) * 0.03)) * (slow > 0 ? 0.7 : 1);
 }
 function launch() {
   if (mode !== 'play' || !ball.stuck || done) return;
@@ -269,7 +269,7 @@ function hitBrick(b, i) {
   blip(300 + (7 - b.r) * 45, 0.07, 0.06); crunch(0.09, 0.07); burst(cx, cy, 6, col);
   stones.push({ x: cx, y: cy, col });
   if (b.kind === 'E') {
-    const r = Math.random(), kind = lives < 4 && r < 0.25 ? 'N' : r < 0.65 ? 'L' : 'P';
+    const r = Math.random(), kind = lives < 3 && r < 0.25 ? 'N' : r < 0.65 ? 'L' : 'P';
     items.push({ x: cx, y: cy - 16, kind });
   }
 }
@@ -327,7 +327,7 @@ function update(dt) {
   if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
   if (shake > 0) shake -= dt;
   if (wide > 0) wide -= dt; if (slow > 0) slow -= dt;
-  pad.w += clamp((wide > 0 ? 128 : 84) - pad.w, -240 * dt, 240 * dt);
+  pad.w += clamp((wide > 0 ? 118 : 76) - pad.w, -240 * dt, 240 * dt);
   const mv = (keys.l ? -1 : 0) + (keys.r ? 1 : 0);
   pad.x = clamp(pad.x + mv * 430 * dt, 6 + pad.w / 2, W - 6 - pad.w / 2);
 
@@ -340,7 +340,7 @@ function update(dt) {
   if (mode !== 'play') return;
 
   for (let i = stones.length - 1; i >= 0; i--) {
-    const s = stones[i]; s.y += (118 + Math.min(level, 6) * 5) * dt;
+    const s = stones[i]; s.y += (130 + Math.min(level, 6) * 6) * dt;
     if (s.y + 7 >= PADY && s.y - 7 <= PADY + 12 && Math.abs(s.x - pad.x) <= pad.w / 2 + 12) { stones.splice(i, 1); catchStone(s); continue; }
     if (s.y > FLOOR - 4) { stones.splice(i, 1); burst(s.x, FLOOR - 4, 7, s.col); crunch(0.12, 0.06); if (combo > 1) say(s.x, FLOOR - 16, 'Beruntun putus'); combo = 0; }
   }
@@ -350,7 +350,7 @@ function update(dt) {
       items.splice(i, 1);
       if (it.kind === 'L') { wide = 14; say(it.x, PADY - 24, 'Tandu lebar'); }
       else if (it.kind === 'P') { slow = 9; say(it.x, PADY - 24, 'Bola pelan'); }
-      else { lives = Math.min(lives + 1, 5); hud(); say(it.x, PADY - 24, 'Nyawa +1'); }
+      else { lives = Math.min(lives + 1, 4); hud(); say(it.x, PADY - 24, 'Nyawa +1'); }
       tune([440, 554, 660, 880], 55, 0.08); continue;
     }
     if (it.y > FLOOR) items.splice(i, 1);
