@@ -28,7 +28,7 @@ function placeNote(p, midi){
   for (let s=0;s<STRINGS.length;s++){
     const off=midi-STRINGS[s].midi;
     if (off<0||off>7) continue;
-    if (off===7 && s<3) continue;                 // pakai senar kosong berikutnya, bukan jari 4
+    if (off===7 && s>0) continue;                 // pakai senar kosong berikutnya, bukan jari 4 (B5 di senar E tetap jari 4)
     const f = off===6 ? (p.includes("b") ? [4,"b4","jari 4 rendah"] : [3,"#3","jari 3 tinggi"]) : FIRST[off];
     return { string:s, off, finger:f[0], label:f[1], desc:f[2], pos:"I" };
   }
@@ -92,6 +92,9 @@ ITEMS.sort((a,b)=>a.t-b.t);
     const expect = L in mem ? mem[L] : (KEY[m[1]]||"");
     if (acc!==expect){ it.acc = acc||"n"; mem[L]=acc; }
   } }
+window.SONG.ITEMS = ITEMS; window.SONG.STRINGS = STRINGS;
+// Tanpa kanvas (halaman partitur): cukup data lagu, tidak perlu player.
+if (!document.getElementById("c")) return;
 
 // ---------------------------------------------------------------------------
 // Gambar
