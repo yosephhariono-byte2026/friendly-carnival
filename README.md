@@ -14,7 +14,7 @@ lalu jaga tujuh pulau dari Sumatra sampai Papua.
 - Layar sentuh: geser jari di kelir, atau pakai tombol di bawah
 - Pusaka: Keris (panah menembus), Gong (musuh terpaku), Payung (menahan satu serangan), Kendi (tambah nyawa)
 
-## Runtuh Candi (`runtuh-candi.html`)
+## Candi Runtuh (`candi-runtuh.html`)
 
 Pemecah batu bergaya retro. Bongkar tumpukan batu dengan bola, lalu tangkap batu yang jatuh
 dengan tandu untuk menyusun kembali relief candi di bawah. Lima candi: Borobudur, Mendut,
@@ -28,4 +28,4 @@ Prambanan, Penataran, dan Sukuh.
 
 ## Mengubah game
 
-Sumbernya ada di `src/`. Jalankan `./build.sh` untuk membuat ulang `index.html` dan `runtuh-candi.html`.
+Sumbernya ada di `src/`. Jalankan `./build.sh` untuk membuat ulang `index.html` dan `candi-runtuh.html`.

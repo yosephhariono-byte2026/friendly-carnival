@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Wraps each game source (title, styles, markup, script) into a standalone page.
 #   src/game.html          -> index.html          (Penjaga Nusantara)
-#   src/runtuh-candi.html  -> runtuh-candi.html   (Runtuh Candi)
+#   src/candi-runtuh.html  -> candi-runtuh.html   (Candi Runtuh)
 set -euo pipefail
 cd "$(dirname "$0")"
 wrap() {
@@ -14,4 +14,4 @@ wrap() {
   } > "$2"
 }
 wrap src/game.html index.html
-wrap src/runtuh-candi.html runtuh-candi.html
+wrap src/candi-runtuh.html candi-runtuh.html
