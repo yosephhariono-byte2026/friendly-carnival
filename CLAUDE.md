@@ -3,6 +3,8 @@
 Pengguna berbahasa Indonesia. Jawab dalam bahasa Indonesia, tanpa em dash.
 
 ## Alur membuat lagu baru
+Alur lengkapnya ada di skill `tab-biola` (`.claude/skills/tab-biola/SKILL.md`). Pakai skill itu setiap ada permintaan lagu baru. Ringkasnya:
+
 1. Salin partitur dari pengguna ke `<lagu>/index.html` (format `SONG_CONFIG`, lihat komentar di `tabplayer/player.js`).
 2. Video tab: `node tabplayer/render_video.js <lagu>/index.html <lagu>/<nama>_tab_biola.mp4 [tempo]`.
    Versi lambat (`_lambat.mp4`) hanya kalau diminta.
