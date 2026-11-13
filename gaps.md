@@ -13,3 +13,6 @@ Questions the vault could not answer from its own notes, and what is missing.
 | Nama persis perintah untuk melihat auto-memory, dan ejaan pengaturan skill manual? | Subtitle otomatis menghilangkan atau mengubahnya. Perlu dokumentasi resmi Claude Code. |
 | Kursus Nate Herk (6 jam): sisa materinya? | Baru bagian verifikasi dan memercayai hasil yang dijadikan catatan. Belum: second brain, subagent, otomatisasi terjadwal, deploy situs, manajemen token, 12 perubahan pola pikir. Teks lengkap sudah ada di raw/. |
 | Video Shane Hummus (1 jam 40 menit): sisa materinya? | Baru bagian yap session dan brief BOSS. Belum: AI mengarang hal yang tidak ada, kolom instruksi proyek, cara mendapat klien dan dibayar. Teks lengkap ada di raw/. |
+| Apakah saran Boris "hapus CLAUDE.md tiap 6 bulan" berlaku untuk CLAUDE.md vault ini? | Vault ini memakai CLAUDE.md sebagai aturan kerja, bukan tambalan model. Perlu keputusan Anda. |
+| Berapa biaya dynamic workflow dan routine? | Video Boris tidak membahas biaya atau batas pemakaian. Perlu dokumentasi resmi. |
+| Transkrip resmi wawancara Boris | Ada di ycrootaccess.com (lebih akurat dari subtitle otomatis), belum diambil. |
