@@ -4,7 +4,7 @@
 - **Dipecah:** 45 catatan baru + 2 indeks baru (`agen-ai`, `pendapatan-sampingan`). Semua "seen", kecuali satu catatan peringatan bertanda "opinion".
 - **Disambung:** catatan lama soal CLAUDE.md, /compact, /clear, izin, dan deny kini menautkan ke pandangan terbaru Lydia Hallie, supaya perbedaannya terlihat.
 - **Diturunkan:** tidak ada.
-- **Total vault:** 151 catatan + 5 indeks, dari 11 sumber (8 video, 3 halaman web).
+- **Total vault:** 152 catatan + 5 indeks, dari 11 sumber (8 video, 3 halaman web).
 
 **3 catatan paling layak dibaca ulang:**
 1. `notes/praktik-lama-tidak-hilang-hanya-berpindah.md`
