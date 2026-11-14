@@ -1,12 +1,12 @@
-# Today, 2026-11-13
+# Today, 2026-11-14
 
-- **Masuk:** 5 video (The Coding Sloth; JavaScript Mastery; Nate Herk; Shane Hummus; Boris Cherny, pembuat Claude Code) + 3 halaman alat. Semua utuh di `raw/`.
-- **Dipecah:** 107 catatan + 3 indeks. Baru sebagian dari kursus Nate Herk (memercayai hasil AI) dan Shane Hummus (yap session, brief BOSS); sisanya menunggu.
-- **Disambung:** catatan non-teknis dihubungkan ke catatan verifikasi, izin, dan keamanan dari video lain.
-- **Diturunkan:** tidak ada. Semua "seen".
-- **Celah tertutup:** "cara cek hasil kalau tidak bisa baca kode" kini terjawab.
+- **Masuk:** 1 video, kuliah Stanford CS329Z "What Are AI Agents?" (Diyi Yang, 70 menit). Disimpan utuh di `raw/`.
+- **Dipecah:** 18 catatan + 1 indeks baru `agen-ai`. Semua "seen" (subtitle otomatis).
+- **Disambung:** risiko agen dihubungkan ke catatan verifikasi, izin, dan memori dari video sebelumnya. Klaim insiden Hugging Face kini punya sumber kedua (masih belum dicek ke sumber asli).
+- **Diturunkan:** tidak ada.
+- **Total vault:** 129 catatan, 4 indeks, 7 sumber.
 
 **3 catatan paling layak dibaca ulang:**
-1. `notes/beri-tugas-dan-cara-mengecek-lalu-biarkan-bekerja.md`
-2. `notes/larangan-di-prompt-bukan-pagar-cabut-alatnya.md`
-3. `notes/tambah-instruksi-hanya-setelah-claude-berulang-kali-salah.md`
+1. `notes/ringkasan-memori-bisa-membuang-instruksi-penting.md`
+2. `notes/agen-paling-kuat-belum-tentu-paling-andal.md`
+3. `notes/agen-bisa-curang-dengan-mengubah-tes.md`

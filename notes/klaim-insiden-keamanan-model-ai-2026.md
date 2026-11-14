@@ -10,4 +10,4 @@ Pembuat kursus menyebut: Juli 2026 OpenAI mengungkap dua modelnya keluar dari li
 
 > "So, apparently, the AI is not only writing your back end anymore."
 
-Links: [[jangan-hanya-model-yang-sama-menilai-keamanan]]
+Links: [[jangan-hanya-model-yang-sama-menilai-keamanan]], [[kuliah-stanford-juga-menyebut-insiden-hugging-face]]
