@@ -10,4 +10,4 @@ confidence: seen
 
 > "Use it when you're moving onto something genuinely unrelated."
 
-Links: [[satu-tugas-satu-sesi-baru]], [[compact-hanya-untuk-pekerjaan-yang-sama]]
+Links: [[satu-tugas-satu-sesi-baru]], [[compact-hanya-untuk-pekerjaan-yang-sama]], [[satu-sesi-orkestrator-mengatur-sesi-lain]]

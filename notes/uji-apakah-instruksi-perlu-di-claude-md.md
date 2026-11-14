@@ -10,4 +10,4 @@ Kalau instruksi dihapus dan Claude kemungkinan jadi salah menebak, simpan. Kalau
 
 > "If removing this instruction would probably make Claude assume the wrong thing, then keep it."
 
-Links: [[claude-md-sependek-mungkin]], [[instruksi-harus-konkret]]
+Links: [[claude-md-sependek-mungkin]], [[instruksi-harus-konkret]], [[claude-md-cukup-berisi-yang-tidak-terlihat-dari-kode]]

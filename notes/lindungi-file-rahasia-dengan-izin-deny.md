@@ -10,4 +10,4 @@ Jangan berharap Claude tahu sendiri bahwa .env berisi rahasia. Blokir dengan atu
 
 > "sensitive files should be explicitly protected"
 
-Links: [[izin-allow-ask-deny]], [[claude-md-hanya-instruksi-bukan-penghalang]], [[jangan-tempel-rahasia-ke-claude]]
+Links: [[izin-allow-ask-deny]], [[claude-md-hanya-instruksi-bukan-penghalang]], [[jangan-tempel-rahasia-ke-claude]], [[aturan-deny-untuk-kesalahan-yang-tidak-bisa-dibatalkan]]

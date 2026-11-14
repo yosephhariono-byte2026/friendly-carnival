@@ -10,4 +10,4 @@ File CLAUDE.md dibaca Claude setiap kali bekerja di proyek itu. Isi yang dipakai
 
 > "This file becomes Claude's permanent memory for the project."
 
-Links: [[claude-code]], [[claude-md-tidak-wajib]], [[perintah-init-hasilnya-biasa-saja]]
+Links: [[claude-code]], [[claude-md-tidak-wajib]], [[perintah-init-hasilnya-biasa-saja]], [[claude-md-cukup-berisi-yang-tidak-terlihat-dari-kode]]

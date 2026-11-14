@@ -10,4 +10,4 @@ Manual: bertanya sebelum tindakan yang perlu izin. Edit otomatis: boleh mengubah
 
 > "Claude Code can work with different levels of freedom depending on the mode you're using."
 
-Links: [[izin-allow-ask-deny]], [[plan-mode-untuk-tugas-besar]], [[beri-kebebasan-secara-bertahap]]
+Links: [[izin-allow-ask-deny]], [[plan-mode-untuk-tugas-besar]], [[beri-kebebasan-secara-bertahap]], [[mode-auto-bisa-diatur-dengan-bahasa-biasa]]

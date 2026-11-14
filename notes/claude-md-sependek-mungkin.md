@@ -10,4 +10,4 @@ CLAUDE.md dimuat di setiap sesi, jadi setiap barisnya memakai "anggaran perhatia
 
 > "If everything useful fits into 30 or 40 lines, that's even better."
 
-Links: [[claude-md-adalah-memori-permanen-proyek]], [[uji-apakah-instruksi-perlu-di-claude-md]], [[konteks-makin-penuh-claude-makin-bodoh]]
+Links: [[claude-md-adalah-memori-permanen-proyek]], [[uji-apakah-instruksi-perlu-di-claude-md]], [[konteks-makin-penuh-claude-makin-bodoh]], [[claude-md-cukup-berisi-yang-tidak-terlihat-dari-kode]]

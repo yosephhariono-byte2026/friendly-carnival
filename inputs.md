@@ -13,6 +13,7 @@ Fill these in, then ask Claude to "run the six passes".
 - https://www.youtube.com/watch?v=g326FZa94FU (raw saved 2026-11-13; yap session and brief sections atomized)
 - https://www.youtube.com/watch?v=qyPCVqFUyDo (ingested 2026-11-13)
 - https://www.youtube.com/watch?v=DGI4vucR71w (ingested 2026-11-14)
+- https://www.youtube.com/watch?v=vlfCjWuv4es (ingested 2026-11-14)
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->

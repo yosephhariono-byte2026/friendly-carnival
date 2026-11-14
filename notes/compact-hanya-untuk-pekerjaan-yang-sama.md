@@ -10,4 +10,4 @@ confidence: seen
 
 > "You only want to use this when you're working on the same work, but you need smaller context."
 
-Links: [[compact-otomatis-tanda-mulai-sesi-baru]], [[clear-saat-pindah-ke-tugas-yang-tidak-berkaitan]]
+Links: [[compact-otomatis-tanda-mulai-sesi-baru]], [[clear-saat-pindah-ke-tugas-yang-tidak-berkaitan]], [[satu-sesi-orkestrator-mengatur-sesi-lain]]
