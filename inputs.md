@@ -14,12 +14,14 @@ Fill these in, then ask Claude to "run the six passes".
 - https://www.youtube.com/watch?v=qyPCVqFUyDo (ingested 2026-11-13)
 - https://www.youtube.com/watch?v=DGI4vucR71w (ingested 2026-11-14)
 - https://www.youtube.com/watch?v=vlfCjWuv4es (ingested 2026-11-14)
+- https://www.youtube.com/watch?v=1BrEgzkPO7o (ingested 2026-11-14)
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->
 - Bagaimana cara hemat memakai Claude? (answered from vault 2026-11-13)
 - Apa itu ponytail, rtk, dan caveman? (answered from vault 2026-11-13)
 - Bagaimana cara memastikan hasil kerja Claude benar sebelum saya terima? (answered from vault 2026-11-13)
+- Ide penghasilan sampingan apa yang cocok untuk saya? (open: needs the user's own background)
 
 ## SCOPE
 <!-- What Claude may change. Default: everything except raw/ files, which are append-only. -->

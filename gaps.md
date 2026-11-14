@@ -17,3 +17,5 @@ Questions the vault could not answer from its own notes, and what is missing.
 | Berapa biaya dynamic workflow dan routine? | Video Boris tidak membahas biaya atau batas pemakaian. Perlu dokumentasi resmi. |
 | Transkrip resmi wawancara Boris | Ada di ycrootaccess.com (lebih akurat dari subtitle otomatis), belum diambil. |
 | Isi CLAUDE.md: tulis teknologi dan perintah proyek, atau hanya yang tak terlihat dari kode? | Sumber berbeda pendapat (JavaScript Mastery vs Lydia Hallie). Yang terbaru dan dari Anthropic: hanya yang tak terlihat dari kode. Perlu dicek ke dokumentasi resmi best practices. |
+| Ide penghasilan sampingan apa yang cocok untuk saya? | Vault belum tahu pekerjaan, keahlian, dan pengalaman Anda. Bisa diisi lewat prompt wawancara (lihat catatan prompt-wawancara-untuk-menemukan-keahlian-anda). |
+| Seberapa realistis angka penghasilan di video Shane Hummus? | Semua contoh dari komunitas berbayarnya; belum ada sumber independen. Juga belum ada sumber lain selain YouTube (freelance, produk digital, dll.). |

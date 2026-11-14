@@ -6,3 +6,4 @@ Entry point to the vault. Every index note is linked from here.
 - [[alat-hemat-token]]: ponytail, rtk, caveman
 - [[cara-memberi-perintah-ke-ai]]: cara menjelaskan keinginan ke AI (yap session, brief BOSS)
 - [[agen-ai]]: konsep agen AI secara umum (kuliah Stanford)
+- [[pendapatan-sampingan]]: ide penghasilan sampingan dengan bantuan AI
