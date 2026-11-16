@@ -35,6 +35,7 @@ window.SONG_CONFIG = {
   sections: { 1:"Intro", 3:"A", 19:"B" },
   pizz: [54, 55],                       // opsional: birama pizzicato
   meters: { 26:"2/4", 27:"4/4" },       // opsional: ganti tanda birama mulai birama itu
+  sheetBarsPerLine: 3,                  // opsional: birama per baris di PDF (default 4; pakai 3 kalau angka jari rapat, mis. E mayor)
   bars: [
     /* 1 */ "r6 B4:1 C#5:1",            // nada:durasi (satuan 1/8), r = istirahat
     /* 2 */ "D5:3 C#5:1 D5:2 F#5:2",    // 3 = ♩. , 1.5 = ♪. , 0.5 = 1/16
@@ -46,6 +47,9 @@ window.SONG_CONFIG = {
 - Tulis komentar `// Ditranskrip dari partitur "<judul>" (<arranger>) milik pengguna.` beserta kunci, birama, tempo.
 - Jumlah durasi tiap birama harus = `barLen` (player melempar error kalau tidak).
 - Angka jari dan senar dihitung otomatis di posisi I (G3 sampai B5); di atas B5 pindah ke posisi III. Tidak perlu menulis jari.
+
+- Ganti tempo di tengah lagu belum didukung. Bagian setengah tempo ditulis dengan nilai not dua kali lipat (satu birama jadi dua) dan diberi label bagian.
+- Kalau sumbernya bukan partitur resmi (mis. buatan AI), tulis itu di komentar file lagu dan bilang ke pengguna bahwa melodinya belum dicocokkan dengan lagu asli.
 
 ## 3. Cek di player
 Screenshot beberapa detik (mis. birama dengan 1/16, not terendah, not tertinggi) dengan Playwright: buka `file://.../<slug>/index.html?video`, panggil `renderAt(detik)`, screenshot 1920x1080. Pastikan tidak ada `pageerror` dan jari/senar masuk akal.
