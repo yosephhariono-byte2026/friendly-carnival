@@ -1,12 +1,13 @@
-# Today, 2026-11-14
+# Today, 2026-11-18
 
-- **Masuk:** 3 video. Kuliah Stanford CS329Z tentang agen AI (Diyi Yang) dan presentasi "Rethinking Claude Code Best Practices" (Lydia Hallie, tim Claude Code, 12 Nov 2026), lalu video Shane Hummus tentang penghasilan sampingan. Semua utuh di `raw/`.
-- **Dipecah:** 45 catatan baru + 2 indeks baru (`agen-ai`, `pendapatan-sampingan`). Semua "seen", kecuali satu catatan peringatan bertanda "opinion".
-- **Disambung:** catatan lama soal CLAUDE.md, /compact, /clear, izin, dan deny kini menautkan ke pandangan terbaru Lydia Hallie, supaya perbedaannya terlihat.
+- **Masuk:** 1 video, podcast YC Lightcone "The Rise Of AI Coworkers" (Lauren Tan dan Roman Ugarte, tim Grok Bot, 1 jam). Disimpan utuh di `raw/`.
+- **Dipecah:** 16 catatan, masuk ke indeks `agen-ai` (bagian baru "Rekan kerja AI"). Semua "seen".
+- **Disambung:** ke catatan lama soal verifikasi, izin bertahap, skill, dan selera; satu catatan juga masuk indeks `pendapatan-sampingan`.
 - **Diturunkan:** tidak ada.
-- **Total vault:** 152 catatan + 5 indeks, dari 11 sumber (8 video, 3 halaman web).
+- **Celah diperbarui:** klaim insiden Hugging Face kini disebut tiga sumber, tetap belum ada sumber asli.
+- **Total vault:** 168 catatan + 5 indeks, dari 12 sumber.
 
 **3 catatan paling layak dibaca ulang:**
-1. `notes/praktik-lama-tidak-hilang-hanya-berpindah.md`
-2. `notes/aturan-deny-untuk-kesalahan-yang-tidak-bisa-dibatalkan.md`
-3. `notes/waspadai-klaim-penghasilan-dari-penjual-kursus.md`
+1. `notes/kepercayaan-pada-bot-dibangun-bertahap.md`
+2. `notes/saat-eksekusi-murah-yang-langka-adalah-tujuan-yang-jelas.md`
+3. `notes/pengetahuan-di-luar-kode-masih-tersimpan-di-kepala-orang.md`

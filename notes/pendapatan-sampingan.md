@@ -16,7 +16,7 @@ Catatan tentang membangun penghasilan sampingan dengan bantuan AI. Sumber sejauh
 
 **Realistisnya:** [[sederhana-tapi-tidak-mudah-butuh-berbulan-bulan]], [[dua-syarat-sebelum-berhenti-kerja]], [[waspadai-klaim-penghasilan-dari-penjual-kursus]]
 
-**Terkait:** [[belajar-menerapkan-bukan-hanya-teori]], [[brief-boss-latar-hasil-gaya-rincian]], [[yap-session-bicara-bebas-tentang-masalahnya]]
+**Terkait:** [[belajar-menerapkan-bukan-hanya-teori]], [[bagikan-apa-yang-anda-pelajari]], [[brief-boss-latar-hasil-gaya-rincian]], [[yap-session-bicara-bebas-tentang-masalahnya]]
 
 > "Claude is only half the lever. The other half is you."
 
