@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peta Apotek Indonesia</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--text:#1d2330;--muted:#5b6475;--line:#e2e5ea;--accent:#0f766e;--accent-soft:#e6f4f2;--bar:#14b8a6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--panel:#171b23;--text:#e6e9ef;--muted:#9aa3b2;--line:#2a303b;--accent:#2dd4bf;--accent-soft:#16302d;--bar:#2dd4bf}}
+:root[data-theme="dark"]{--bg:#0f1218;--panel:#171b23;--text:#e6e9ef;--muted:#9aa3b2;--line:#2a303b;--accent:#2dd4bf;--accent-soft:#16302d;--bar:#2dd4bf}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{display:flex;height:100%}
+#panel{width:340px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+#panel header{padding:16px 16px 8px}
+h1{font-size:18px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:12px}
+.big{font-size:28px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.filters{padding:8px 16px;display:grid;gap:8px;border-bottom:1px solid var(--line)}
+label{font-size:12px;color:var(--muted);display:grid;gap:4px}
+select,input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font:inherit}
+#list{overflow:auto;padding:8px 16px 16px;flex:1}
+#list h2{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 6px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:5px 6px;border-radius:5px;cursor:pointer}
+.row:hover{background:var(--accent-soft)}
+.row .n{font-variant-numeric:tabular-nums;color:var(--muted)}
+.row .b{grid-column:1/-1;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.row .b i{display:block;height:100%;background:var(--bar)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+#map{flex:1;min-width:0}
+.leaflet-popup-content{font-size:13px;line-height:1.4}
+.leaflet-popup-content b{font-size:14px}
+.leaflet-popup-content a{color:#0f766e}
+#toggle{display:none}
+.src{padding:8px 16px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+@media (max-width:720px){
+  #app{flex-direction:column}
+  #panel{width:100%;max-height:46%;border-right:0;border-bottom:1px solid var(--line)}
+  #panel.closed #list,#panel.closed .filters,#panel.closed .src{display:none}
+  #toggle{display:inline-block;float:right;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <header>
+      <button id="toggle" type="button">Filter</button>
+      <h1>Peta Apotek Indonesia</h1>
+      <div class="sub">Sumber: OpenStreetMap</div>
+      <div><span class="big" id="total">0</span> <span class="sub" id="totalLbl">apotek ditampilkan</span></div>
+    </header>
+    <div class="filters">
+      <label>Provinsi<select id="fProv"><option value="">Semua provinsi</option></select></label>
+      <label>Jaringan<select id="fJar"><option value="">Semua jaringan</option></select></label>
+      <label>Cari nama / alamat<input id="fCari" type="search" placeholder="mis. Kimia Farma, Jl. Sudirman"></label>
+    </div>
+    <div id="list"></div>
+    <div class="src">Data © kontributor OpenStreetMap (ODbL). Kelengkapan bervariasi per daerah.</div>
+  </aside>
+  <div id="map"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script>
+const DATA = /*__DATA__*/null;
+const PAL = ["#e11d48","#2563eb","#16a34a","#d97706","#9333ea","#0891b2","#db2777","#65a30d","#ea580c","#4f46e5"];
+const jarColor = DATA.jar.map((j,i) => j === "Independen/Lainnya" ? "#64748b" : (PAL[i] || "#94a3b8"));
+const fmt = n => n.toLocaleString("id-ID");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const map = L.map("map", {preferCanvas: true}).setView([-2.5, 118], 5);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+const cluster = L.markerClusterGroup({chunkedLoading: true, maxClusterRadius: 50, disableClusteringAtZoom: 17});
+map.addLayer(cluster);
+
+const markers = DATA.d.map(r => {
+  const m = L.circleMarker([r[0], r[1]], {radius: 6, weight: 1, color: "#fff", fillColor: jarColor[r[3]], fillOpacity: .9});
+  m.bindPopup(() => `<b>${esc(r[2])}</b><br>${esc(DATA.jar[r[3]])}<br>` +
+    `${esc([r[5], DATA.prov[r[4]]].filter(Boolean).join(", "))}` +
+    (r[6] ? `<br>${esc(r[6])}` : "") + (r[7] ? `<br>Telp: ${esc(r[7])}` : "") +
+    `<br><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${r[0]},${r[1]}">Google Maps</a> · ` +
+    `<a target="_blank" rel="noopener" href="https://www.openstreetmap.org/${r[8]}">OSM</a>` +
+    `<br><span style="color:#888">${r[0]}, ${r[1]}</span>`);
+  return m;
+});
+
+const fProv = document.getElementById("fProv"), fJar = document.getElementById("fJar"), fCari = document.getElementById("fCari");
+DATA.prov.forEach((p,i) => fProv.add(new Option(p, i)));
+DATA.jar.forEach((j,i) => fJar.add(new Option(j, i)));
+
+function bars(title, counts, names, onClick, colors) {
+  const ent = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  if (!ent.length) return "";
+  const max = ent[0][1];
+  return `<h2>${title}</h2>` + ent.map(([k,n]) =>
+    `<div class="row" data-k="${esc(k)}" data-t="${title}"><span>${colors ? `<span class="dot" style="background:${colors[k]}"></span>` : ""}${esc(names ? names[k] : k)}</span>` +
+    `<span class="n">${fmt(n)}</span><span class="b"><i style="width:${(n/max*100).toFixed(1)}%"></i></span></div>`).join("");
+}
+
+let firstFit = true;
+function apply() {
+  const p = fProv.value, j = fJar.value, q = fCari.value.trim().toLowerCase();
+  const pick = [], byProv = {}, byJar = {}, byKab = {};
+  DATA.d.forEach((r,i) => {
+    if (p !== "" && r[4] != p) return;
+    if (j !== "" && r[3] != j) return;
+    if (q && !(r[2] + " " + r[6] + " " + r[5]).toLowerCase().includes(q)) return;
+    pick.push(markers[i]);
+    byProv[r[4]] = (byProv[r[4]] || 0) + 1;
+    byJar[r[3]] = (byJar[r[3]] || 0) + 1;
+    const kab = r[5] || "(kab/kota tidak terpetakan)";
+    byKab[kab] = (byKab[kab] || 0) + 1;
+  });
+  cluster.clearLayers();
+  cluster.addLayers(pick);
+  document.getElementById("total").textContent = fmt(pick.length);
+  let html = bars("Jaringan", byJar, DATA.jar, true, jarColor);
+  html += p === "" ? bars("Provinsi", byProv, DATA.prov, true) : bars("Kabupaten / Kota", byKab);
+  document.getElementById("list").innerHTML = html;
+  if (pick.length && (p !== "" || !firstFit)) map.fitBounds(L.featureGroup(pick).getBounds(), {padding: [20,20], maxZoom: 15});
+  firstFit = false;
+}
+document.getElementById("list").addEventListener("click", e => {
+  const row = e.target.closest(".row"); if (!row) return;
+  if (row.dataset.t === "Provinsi") { fProv.value = row.dataset.k; apply(); }
+  else if (row.dataset.t === "Jaringan") { fJar.value = row.dataset.k; apply(); }
+  else if (row.dataset.t === "Kabupaten / Kota") { fCari.value = row.dataset.k.startsWith("(") ? "" : row.dataset.k; apply(); }
+});
+let tmr; fCari.addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(apply, 300); });
+fProv.addEventListener("change", apply); fJar.addEventListener("change", apply);
+document.getElementById("toggle").addEventListener("click", () => document.getElementById("panel").classList.toggle("closed"));
+apply();
+</script>
+</body>
+</html>
