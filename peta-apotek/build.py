@@ -22,8 +22,6 @@ JARINGAN = [
     ("Guardian", r"\bguardian\b"),
     ("Viva Generik", r"\bviva\b"),
     ("Roxy", r"\broxy\b"),
-    ("Apotek Alba", r"\balba\b"),
-    ("Apotek Pelita", r"\bpelita\b"),
     ("Watsons", r"\bwatsons\b"),
     ("Boots", r"\bboots\b"),
 ]
@@ -35,7 +33,10 @@ def jaringan(nama, brand):
     for label, pola in JARINGAN:
         if re.search(pola, teks):
             return label
-    return brand.strip() or LAIN
+    # Pakai tag brand hanya kalau memang terdengar seperti apotek (ada salah input, mis. merek hotel)
+    if re.search(r"apot|farma|pharm", brand.lower()):
+        return brand.strip()
+    return LAIN
 
 
 def alamat(t):
@@ -44,6 +45,36 @@ def alamat(t):
               t.get("addr:subdistrict", "") or t.get("addr:district", ""),
               t.get("addr:city", ""), t.get("addr:postcode", "")]
     return ", ".join(x for x in bagian if x) or t.get("addr:full", "")
+
+
+def kategori(nama, jar):
+    n = nama.lower()
+    if jar != LAIN and jar in {j for j, _ in JARINGAN}:
+        return "Apotek (jaringan)"
+    if re.search(r"\bapot(e|i)k\b|\bfarma\b|\bpharma", n):
+        return "Apotek"
+    if re.search(r"toko obat|\bherbal\b", n):
+        return "Toko obat / herbal"
+    return "Perlu dicek"
+
+
+def tandai_duplikat(df, jarak_m=60):
+    """Tandai titik dengan nama mirip yang berjarak < jarak_m (kemungkinan dicatat dua kali)."""
+    import math
+    kunci = df["nama"].str.lower().str.replace(r"\bapoti?k\b|\bapotek\b|[^a-z0-9 ]", "", regex=True)
+    kunci = kunci.str.split().str.join(" ")
+    hasil = [""] * len(df)
+    lat, lon = df["latitude"].tolist(), df["longitude"].tolist()
+    for i in range(len(df)):
+        for j in range(i + 1, len(df)):
+            if not kunci[i] or kunci[i] != kunci[j]:
+                continue
+            dy = (lat[i] - lat[j]) * 111320
+            dx = (lon[i] - lon[j]) * 111320 * math.cos(math.radians(lat[i]))
+            if math.hypot(dx, dy) < jarak_m:
+                hasil[i] = hasil[i] or df["osm_id"][j]
+                hasil[j] = hasil[j] or df["osm_id"][i]
+    return hasil
 
 
 def baca():
@@ -58,7 +89,8 @@ def baca():
         key = f'{el["type"]}/{el["id"]}'
         rows.append({
             "nama": nama,
-            "jaringan": jaringan(nama, t.get("brand", "")),
+            "jaringan": (jar := jaringan(nama, t.get("brand", ""))),
+            "kategori": kategori(nama, jar),
             "kab_kota": el.get("_kabkota", ""),
             "provinsi": el.get("_provinsi", ""),
             "alamat": alamat(t),
@@ -70,7 +102,9 @@ def baca():
             "osm_id": key,
         })
     rows.sort(key=lambda r: (r["provinsi"], r["kab_kota"], r["nama"].lower()))
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    df["kemungkinan_duplikat_dengan"] = tandai_duplikat(df)
+    return df
 
 
 def tulis_excel(df, path):
@@ -120,6 +154,8 @@ def main():
     print(f"Tanpa nama: {(df['nama'] == '(tanpa nama)').sum()}")
     print(f"Ada alamat: {(df['alamat'] != '').sum()}")
     print(f"Ada telepon: {(df['telepon'] != '').sum()}")
+    print("Per kategori:", df["kategori"].value_counts().to_dict())
+    print(f"Kemungkinan duplikat: {(df['kemungkinan_duplikat_dengan'] != '').sum()}")
     print("Per kab/kota:", df["kab_kota"].value_counts().to_dict())
     print("Per jaringan:", Counter(df["jaringan"]).most_common(12))
 

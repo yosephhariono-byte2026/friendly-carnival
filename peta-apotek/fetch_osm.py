@@ -33,6 +33,13 @@ foreach.kabs->.k(
 );"""
 
 
+def nama_wilayah(t):
+    """Nama resmi (Kota Bogor vs Kabupaten Bogor), dirapikan."""
+    n = t.get("official_name:id") or t.get("official_name") or t.get("name:id") or t.get("name", "")
+    n = n.replace("Kota Administrasi ", "").replace("Kabupaten Administrasi ", "")
+    return n.replace("Tangeran Selatan", "Tangerang Selatan").strip()
+
+
 def provinsi_dari_kab(nama):
     n = nama.lower()
     if "jakarta" in n or "seribu" in n:
@@ -72,7 +79,7 @@ def main():
     for el in data["elements"]:
         if el["type"] == "area":
             t = el.get("tags", {})
-            kab = t.get("name:id") or t.get("name", "")
+            kab = nama_wilayah(t)
             per_kab.setdefault(kab, 0)
             continue
         key = f'{el["type"]}/{el["id"]}'
