@@ -1,0 +1,10 @@
+[out:json][timeout:900];
+area["ISO3166-2"~"^ID-(JK|JB|BT)$"]["admin_level"="4"]->.prov;
+rel(area.prov)["boundary"="administrative"]["admin_level"="5"]
+  ["name"~"Jakarta|Seribu|Bogor|Depok|Bekasi|Tangerang",i];
+map_to_area->.kabs;
+foreach.kabs->.k(
+  .k out tags;
+  (nwr(area.k)["amenity"="pharmacy"]; nwr(area.k)["healthcare"="pharmacy"];);
+  out center tags;
+);

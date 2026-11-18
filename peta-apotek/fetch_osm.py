@@ -6,7 +6,8 @@ Kota & Kab. Bekasi (Jawa Barat), Kota & Kab. Tangerang, Kota Tangerang Selatan (
 
 Hasil mentah: data/raw/jabodetabek.json
 
-Pakai:  python3 fetch_osm.py
+Pakai:  python3 fetch_osm.py                      # ambil langsung dari Overpass
+        python3 fetch_osm.py --dari-file data.json   # olah file ekspor overpass-turbo.eu
 """
 import json
 import os
@@ -54,12 +55,21 @@ def overpass(query, coba=6):
     raise RuntimeError("Overpass gagal setelah beberapa kali percobaan")
 
 
+def tulis_query():
+    with open(os.path.join(HERE, "query_overpass_turbo.txt"), "w") as f:
+        f.write(QUERY + "\n")
+
+
 def main():
     os.makedirs(RAW, exist_ok=True)
     t0 = time.time()
     hasil, lihat, per_kab = [], set(), {}
     kab = ""
-    for el in overpass(QUERY)["elements"]:
+    if "--dari-file" in sys.argv:
+        data = json.load(open(sys.argv[sys.argv.index("--dari-file") + 1]))
+    else:
+        data = overpass(QUERY)
+    for el in data["elements"]:
         if el["type"] == "area":
             t = el.get("tags", {})
             kab = t.get("name:id") or t.get("name", "")
@@ -81,4 +91,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--tulis-query" in sys.argv:
+        tulis_query()
+    else:
+        main()
