@@ -128,6 +128,7 @@ function system(firstBar, count, isFirst) {
         const nx = (xAt[it.t + it.d] ?? bx + barW + 8) + 5, up = it.step < MID, ty = y + (up ? 6 : -6), dy = up ? 6 : -6;
         out.push(`<path d="M${f(xc + 3)} ${f(ty)} Q${f((xc + nx) / 2)} ${f(ty + dy)} ${f(nx - 3)} ${f(ty)}" fill="none" stroke="${INK}" stroke-width="1.2"/>`);
       }
+      if (it.first && e.fermata) out.push(glyph("\u{1D110}", xc - 7.5, Math.min(Y0 - 4, y - 10), 22));
       if (it.first && e.trill) out.push(text("tr", xc, Math.min(Y0 - 7, y - 13), 13, `font-family="DejaVu Serif" font-style="italic" font-weight="bold" text-anchor="middle" fill="${INK}"`));
       // angka jari dan senar di bawah paranada
       if (it.first) {

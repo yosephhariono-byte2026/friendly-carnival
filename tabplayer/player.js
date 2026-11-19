@@ -8,7 +8,7 @@
 //   sections: {bar: "label"},        // label birama (A, B, pizz., ...)
 //   pizz: [bar, ...],                // birama yang dipetik
 //   meters: {26:"2/4", 27:"4/4"},    // opsional: ganti tanda birama mulai birama itu
-//   token boleh diberi tanda: "F4:4!tr" (trill), "E4:1!pz" (pizz. satu nada), "E4:1!arco"
+//   token boleh diberi tanda: "F4:4!tr" (trill), "E4:1!pz" (pizz. satu nada), "E4:1!arco", "C5:2!fer" (fermata/tahan)
 //   bars: ["F4:1 G4:1 r4", ...]      // nada:durasi, r = istirahat, ~ = sambung ke token sebelumnya
 // }
 (function () {
@@ -61,7 +61,7 @@ BARS.forEach((bar,i)=>{
     if (cont) EVENTS[EVENTS.length-1].dur+=d;
     else { const midi=midiOf(p);
       const pizz = flags.includes("pz") || (PIZZ.has(barNo) && !flags.includes("arco"));
-      EVENTS.push({ start:pos, dur:d, pitch:p, midi, bar:barNo, pizz, trill: flags.includes("tr") ? trillUpper(p) : 0, ...placeNote(p,midi) }); }
+      EVENTS.push({ start:pos, dur:d, pitch:p, midi, bar:barNo, pizz, trill: flags.includes("tr") ? trillUpper(p) : 0, fermata: flags.includes("fer"), ...placeNote(p,midi) }); }
     pos+=d; sum+=d;
   }
   if (sum!==BL[i]) throw new Error("Birama "+barNo+" berjumlah "+sum+", seharusnya "+BL[i]);
@@ -219,7 +219,7 @@ function drawFingerboard(cur, next){
   const show=cur||next;
   if (show){ const c=STRINGS[show.string].color, x0=FB_L+26; g.textAlign="left"; g.textBaseline="alphabetic";
     g.globalAlpha=cur?1:0.45;
-    const parts=[pretty(show.pitch)].concat(show.desc.split(", ")); if (show.pizz) parts.push("pizz."); if (show.trill) parts.push("trill (getar ke nada atas)");
+    const parts=[pretty(show.pitch)].concat(show.desc.split(", ")); if (show.pizz) parts.push("pizz."); if (show.trill) parts.push("trill (getar ke nada atas)"); if (show.fermata) parts.push("fermata (boleh ditahan)");
     const top=MID_B-28-parts.length*26-104;
     g.fillStyle=c; g.font="bold 26px 'DejaVu Sans'"; g.fillText("Senar "+STRINGS[show.string].name,x0,top);
     g.fillStyle="#111"; g.font="bold 64px 'DejaVu Sans'"; g.fillText(show.label,x0,top+74);
@@ -277,6 +277,8 @@ function drawStaff(u, cur){
     // ikatan
     if (it.tie){ const up=it.step<34, nx=x+it.d*ST_PX; g.strokeStyle=col; g.lineWidth=1.8; g.beginPath();
       const ty=y+(up?12:-12); g.moveTo(x+6,ty); g.quadraticCurveTo((x+nx)/2,ty+(up?14:-14),nx-6,ty); g.stroke(); }
+    // fermata
+    if (it.first && e.fermata){ g.fillStyle=col; g.textAlign="center"; glyph("\u{1D111}",x,Math.max(BOT_LINE,y)+44,44); }   // di bawah paranada, tidak menabrak angka jari
     // trill
     if (it.first && e.trill){ g.fillStyle=col; g.textAlign="center"; g.font="italic bold 22px 'DejaVu Serif'"; g.fillText("tr",x,Math.min(BOT_LINE-4*LINE_GAP-14,y-22)); }
     // angka jari

@@ -39,7 +39,7 @@ window.SONG_CONFIG = {
     /* 1 */ "r6 B4:1 C#5:1",            // nada:durasi (satuan 1/8), r = istirahat
     /* 2 */ "D5:3 C#5:1 D5:2 F#5:2",    // 3 = ♩. , 1.5 = ♪. , 0.5 = 1/16
     /* 3 */ "D4:1 C4:0.5 E4:0.5 ~E4:4 r2", // ~ = sambung (tie) ke nada sebelumnya
-    /* 4 */ "r1 A4:0.5 G#4:0.5 A4:1 E4:1 F4:4!tr", // !tr = trill, !pz = pizz. satu nada, !arco = gesek di birama pizz
+    /* 4 */ "r1 A4:0.5 G#4:0.5 A4:1 E4:1 F4:4!tr", // !tr = trill, !pz = pizz. satu nada, !arco = gesek di birama pizz, !fer = fermata (ditandai saja, tempo tidak diperlambat)
   ],
 };
 ```
