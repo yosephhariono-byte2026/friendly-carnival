@@ -78,7 +78,7 @@ function system(firstBar, count, isFirst) {
     else out.push(line(bx + barW, Y0, bx + barW, YB, 1));
     // label bagian
     if (SECTIONS[bar]) {
-      const s = SECTIONS[bar], w = 9 + s.length * 6.6, lx = b === 0 ? bx + 2 : bx + 4;
+      const s = SECTIONS[bar], w = 10 + s.length * 7.3, lx = b === 0 ? bx + 2 : bx + 4;
       out.push(`<rect x="${f(lx)}" y="${Y0 - 40}" width="${f(w)}" height="17" rx="2" fill="none" stroke="${INK}" stroke-width="1"/>`,
         text(s, lx + w / 2, Y0 - 27.5, 11.5, `font-family="DejaVu Sans" font-weight="bold" text-anchor="middle" fill="${INK}"`));
     }

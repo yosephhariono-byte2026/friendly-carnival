@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stop The Wedding Tab Biola</title>
+<link rel="stylesheet" href="../tabplayer/player.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div id="ctl">
+    <button id="play">Putar</button>
+    <button id="restart">Ulang</button>
+    <label>Tempo <input id="tempo" type="range"> <span id="tv"></span></label>
+    <label><input id="sound" type="checkbox" checked> Suara</label>
+  </div>
+</div>
+<script>
+// Disalin dari partitur "STOP THE WEDDING (Versi Lurus)" kiriman pengguna, 61 birama.
+// Partitur itu dibuat oleh AI (Gemini), bukan partitur resmi. Pengguna sudah mendengarkan videonya dan menyatakan melodinya cocok dengan lagu aslinya.
+// E mayor, 4/4, ♩ = 134. Satuan durasi: 1/8 (birama = 8).
+// Birama 49 di sumber bertempo setengah (♩ = 67). Di sini ditulis sebagai dua birama (49-50) dengan nilai
+// not dua kali lipat, jadi bunyinya sama. Akibatnya birama 50-61 di sumber menjadi 51-62 di sini.
+window.SONG_CONFIG = {
+  kicker: "Ashe",
+  title: "Stop The Wedding",
+  subtitle: "E mayor  \u00B7  tab biola",
+  time: "4/4", keySig: ["F#","C#","G#","D#"],
+  barLen: 8, beat: 2, tempo: 134, sheetBarsPerLine: 3,
+  sections: { 1:"Intro", 5:"Verse 1", 13:"Pre-Chorus", 17:"Chorus 1", 26:"Verse 2", 30:"Pre-Chorus", 34:"Chorus 2",
+    45:"Bridge", 49:"Breakdown (setengah tempo)", 51:"a tempo", 52:"Final Chorus", 61:"Outro" },
+  bars: [
+    /* 1  */ "r8",
+    /* 2  */ "r8",
+    /* 3  */ "r8",
+    /* 4  */ "r8",
+    /* 5  */ "r2 G#4:1 G#4:1 G#4:1 G#4:1 F#4:1 E4:1",
+    /* 6  */ "r1 G#4:1 G#4:1 G#4:1 G#4:1 A4:1 G#4:1 F#4:1",
+    /* 7  */ "E4:1 F#4:1 G#4:1 G#4:1 G#4:1 G#4:1 F#4:1 E4:1",
+    /* 8  */ "E4:1 F#4:1 G#4:1 G#4:1 G#4:1 G#4:1 A4:1 G#4:1",
+    /* 9  */ "r2 E4:1 E4:1 E4:1 E4:1 F#4:1 E4:1",
+    /* 10 */ "r2 E4:1 E4:1 E4:1 E4:1 F#4:1 E4:1",
+    /* 11 */ "r2 E4:1 E4:1 E4:1 F#4:1 ~F#4:2",
+    /* 12 */ "r2 E4:1 E4:1 E4:1 F#4:1 E4:2",
+    /* 13 */ "r2 E4:1 F#4:1 G#4:1 G#4:1 F#4:1 E4:1",
+    /* 14 */ "r2 G#4:1 A4:1 B4:1 B4:1 A4:1 G#4:1",
+    /* 15 */ "r2 A4:1 B4:1 C#5:1 C#5:1 B4:1 A4:1",
+    /* 16 */ "r2 B4:1 C#5:1 D#5:2 E5:2",
+    /* 17 */ "r5 B4:1 C#5:1 D#5:1",
+    /* 18 */ "E5:2 B4:1 B4:2 G#4:1 A4:1 B4:1",
+    /* 19 */ "E5:2 B4:1 B4:2 G#4:1 A4:1 B4:1",
+    /* 20 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 G#4:1",
+    /* 21 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 G#4:1",
+    /* 22 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 23 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 24 */ "r1 G#5:1 F#5:1 E5:1 D#5:1 C#5:1 B4:2",
+    /* 25 */ "r1 G#5:1 F#5:1 E5:1 E5:4",
+    /* 26 */ "E4:1 F#4:1 G#4:1 G#4:1 F#4:2 E4:2",
+    /* 27 */ "r2 G#4:1 G#4:1 A4:1 G#4:1 F#4:2",
+    /* 28 */ "E4:1 F#4:1 G#4:1 G#4:1 F#4:2 E4:2",
+    /* 29 */ "r2 B4:1 B4:1 C#5:1 B4:1 A4:2",
+    /* 30 */ "r2 E4:1 F#4:1 G#4:1 G#4:1 F#4:1 E4:1",
+    /* 31 */ "r2 G#4:1 A4:1 B4:1 B4:1 A4:1 G#4:1",
+    /* 32 */ "r2 A4:1 B4:1 C#5:1 C#5:1 B4:1 A4:1",
+    /* 33 */ "r2 B4:1 C#5:1 D#5:2 E5:2",
+    /* 34 */ "r5 B4:1 C#5:1 D#5:1",
+    /* 35 */ "E5:2 B4:1 B4:2 G#4:1 A4:1 B4:1",
+    /* 36 */ "E5:2 B4:1 B4:2 G#4:1 A4:1 B4:1",
+    /* 37 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 G#4:1",
+    /* 38 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 G#4:1",
+    /* 39 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 40 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 41 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 42 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 43 */ "r1 G#5:1 F#5:1 E5:1 D#5:1 C#5:1 B4:2",
+    /* 44 */ "r1 G#5:1 F#5:1 E5:1 E5:4",
+    /* 45 */ "G#4:1 A4:1 B4:2 B4:1 C#5:1 B4:1 A4:1",
+    /* 46 */ "G#4:1 F#4:1 E4:2 F#4:1 G#4:1 A4:2",
+    /* 47 */ "B4:1 C#5:1 D#5:1 E5:1 D#5:1 C#5:1 B4:2",
+    /* 48 */ "G#4:1 A4:1 B4:1 C#5:1 D#5:1 E5:1 E5:2",
+    /* 49 */ "E5:4 B4:4",
+    /* 50 */ "G#4:2 A4:2 B4:4",
+    /* 51 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 B4:1",
+    /* 52 */ "r5 B4:1 C#5:1 D#5:1",
+    /* 53 */ "E5:2 B4:1 B4:2 G#4:1 A4:1 B4:1",
+    /* 54 */ "E5:2 B4:1 B4:2 G#4:1 A4:1 B4:1",
+    /* 55 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 G#4:1",
+    /* 56 */ "C#5:1 B4:1 A4:1 G#4:1 F#4:1 G#4:1 A4:1 G#4:1",
+    /* 57 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 58 */ "r1 G#5:1 F#5:1 E5:1 D#5:2 E5:2",
+    /* 59 */ "r1 G#5:1 F#5:1 E5:1 D#5:1 C#5:1 B4:2",
+    /* 60 */ "r1 G#5:1 F#5:1 E5:1 E5:4",
+    /* 61 */ "r3 G#5:1 F#5:1 E5:1 D#5:2",
+    /* 62 */ "E5:8",
+  ],
+};
+</script>
+<script src="../tabplayer/player.js"></script>
+</body>
+</html>
