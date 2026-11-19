@@ -58,6 +58,7 @@ question. Otherwise start.
 | `index.md` | Entry point; links to every index note |
 | `today.md` | Daily note, the only file a human reads every day |
 | `gaps.md` | Questions the vault could not answer, and what is missing |
+| `weekly/` | One-page weekly summaries, written by the `ringkasan-mingguan` skill (`tools/weekly.py`) |
 | `templates/` | `raw.md` and `note.md` formats |
 
 ## The six passes
