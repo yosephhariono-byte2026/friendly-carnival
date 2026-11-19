@@ -68,6 +68,6 @@ Nama file pakai garis bawah, mis. `kokoro_no_tomo_tab_biola.mp4`.
 ## 6. Commit, push, kirim link
 1. Commit dan push ke branch kerja sesi ini.
 2. Beri link unduhan langsung untuk **setiap** file hasil:
-   `https://github.com/yosephhariono-byte2026/friendly-carnival/raw/<branch>/<slug>/<file>`
+   `https://github.com/yosephhariono-byte2026/violin-tab/raw/<branch>/<slug>/<file>`
 3. **Jangan** kirim video lewat Gmail atau Drive: batas lampiran dari sesi ini sekitar 3 MB, dan pengguna tidak bisa mengunduh dari kartu file di chat.
 4. Ringkas di akhir: durasi, jumlah birama/halaman, rentang nada, catatan penting (bagian jeda, not yang mungkin meragukan, perubahan pada player).

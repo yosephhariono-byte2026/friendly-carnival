@@ -14,7 +14,7 @@ Alur lengkapnya ada di skill `tab-biola` (`.claude/skills/tab-biola/SKILL.md`). 
 ## Mengirim file ke pengguna
 Setelah push, selalu berikan link unduhan langsung dari GitHub untuk setiap file hasil (video, PDF):
 
-    https://github.com/yosephhariono-byte2026/friendly-carnival/raw/<branch>/<lagu>/<file>
+    https://github.com/yosephhariono-byte2026/violin-tab/raw/<branch>/<lagu>/<file>
 
 Pengguna tidak bisa mengunduh dari kartu file di chat, dan lampiran Gmail dari sesi ini dibatasi sekitar 3 MB
 (video tab jauh lebih besar). Jadi jangan coba kirim video lewat Gmail atau Drive; pakai link GitHub di atas.
