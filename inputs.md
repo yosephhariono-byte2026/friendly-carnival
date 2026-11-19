@@ -16,6 +16,7 @@ Fill these in, then ask Claude to "run the six passes".
 - https://www.youtube.com/watch?v=vlfCjWuv4es (ingested 2026-11-14)
 - https://www.youtube.com/watch?v=1BrEgzkPO7o (ingested 2026-11-14)
 - https://www.youtube.com/watch?v=y1-9yeYLJUo (ingested 2026-11-18)
+- Screenshots of "Fluent in Claude Code, Part 1" by @Zephyr_hg, sent in chat (ingested 2026-11-19, images in raw/assets/)
 
 ## QUESTIONS
 <!-- Questions the vault must be able to answer. -->
